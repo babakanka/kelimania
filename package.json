@@ -1,0 +1,15 @@
+{
+  "name": "kelimania-backend",
+  "version": "1.0.0",
+  "description": "TDK Sözlük API Backend for KeliMania - Netlify",
+  "main": "netlify/functions/check.js",
+  "scripts": {
+    "test": "echo \"No tests yet\""
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.1"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}
