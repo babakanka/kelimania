@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KeliMania - Türkçe Kelime Oyunu</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { 
+            margin: 0; 
+            padding: 0; 
+            font-family: system-ui, -apple-system, sans-serif; 
+        }
+        #root { 
+            width: 100%; 
+            min-height: 100vh; 
+        }
+        .tile {
+            transition: all 0.2s;
+        }
+        .tile:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+    
+    <script>
+        const { useState, useEffect } = React;
+        const { createRoot } = ReactDOM;
+        
+        // Backend API check
+        const checkWord = async (word) => {
+            try {
+                const response = await fetch(
+                    `https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word=${word}`
+                );
+                const data = await response.json();
+                console.log('API Response:', data);
+                return data.valid;
+            } catch (error) {
+                console.error('API Error:', error);
+                return false;
+            }
+        };
+        
+        // Main Game Component
+        function KeliMania() {
+            const [currentWord, setCurrentWord] = useState('');
+            const [result, setResult] = useState(null);
+            const [checking, setChecking] = useState(false);
+            const [message, setMessage] = useState('KeliMania - TDK Backend ile Kelime Kontrol');
+            
+            const handleCheck = async () => {
+                if (!currentWord || currentWord.length < 2) {
+                    setMessage('En az 2 harfli kelime girin');
+                    return;
+                }
+                
+                setChecking(true);
+                setMessage(`"${currentWord}" kontrol ediliyor...`);
+                setResult(null);
+                
+                const isValid = await checkWord(currentWord);
+                
+                setResult(isValid);
+                setMessage(
+                    isValid 
+                        ? `✅ "${currentWord}" GEÇERLİ - TDK Sözlük'te bulundu!`
+                        : `❌ "${currentWord}" GEÇERSİZ - TDK Sözlük'te yok`
+                );
+                setChecking(false);
+            };
+            
+            const exampleWords = ['MASA', 'AĞAÇ', 'KAPI', 'ARABA', 'KITAP', 'KALEM', 'ASDFG'];
+            
+            return React.createElement('div', {
+                className: 'min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-600 p-4 flex items-center justify-center'
+            },
+                React.createElement('div', {
+                    className: 'bg-white rounded-2xl shadow-2xl p-8 max-w-2xl w-full'
+                },
+                    // Header
+                    React.createElement('div', { className: 'text-center mb-8' },
+                        React.createElement('h1', {
+                            className: 'text-5xl font-bold mb-2',
+                            style: { 
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }
+                        }, '🎮 KeliMania'),
+                        React.createElement('p', {
+                            className: 'text-gray-600 text-lg'
+                        }, 'TDK Sözlük API ile Kelime Kontrolü')
+                    ),
+                    
+                    // Status Box
+                    React.createElement('div', {
+                        className: `p-6 rounded-xl mb-6 ${
+                            result === null ? 'bg-blue-100' :
+                            result ? 'bg-green-100' : 'bg-red-100'
+                        }`
+                    },
+                        React.createElement('p', {
+                            className: `text-center font-bold text-lg ${
+                                result === null ? 'text-blue-800' :
+                                result ? 'text-green-800' : 'text-red-800'
+                            }`
+                        }, message)
+                    ),
+                    
+                    // Input
+                    React.createElement('div', { className: 'mb-6' },
+                        React.createElement('label', {
+                            className: 'block text-sm font-semibold text-gray-700 mb-3'
+                        }, 'Kelime Girin:'),
+                        React.createElement('input', {
+                            type: 'text',
+                            value: currentWord,
+                            onChange: (e) => setCurrentWord(e.target.value.toUpperCase()),
+                            onKeyPress: (e) => e.key === 'Enter' && handleCheck(),
+                            placeholder: 'Örnek: MASA, AĞAÇ, KAPI',
+                            disabled: checking,
+                            className: 'w-full px-6 py-4 border-2 border-gray-300 rounded-xl focus:border-purple-500 focus:outline-none text-2xl font-bold text-center tracking-wider'
+                        })
+                    ),
+                    
+                    // Check Button
+                    React.createElement('button', {
+                        onClick: handleCheck,
+                        disabled: checking || !currentWord,
+                        className: 'w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 disabled:from-gray-400 disabled:to-gray-400 text-white font-bold py-4 px-8 rounded-xl transition-all text-xl shadow-lg'
+                    }, checking ? '⏳ Kontrol Ediliyor...' : '🔍 Kelimeyi Kontrol Et'),
+                    
+                    // Example Words
+                    React.createElement('div', {
+                        className: 'mt-8 p-6 bg-gray-50 rounded-xl'
+                    },
+                        React.createElement('h3', {
+                            className: 'font-bold text-gray-700 mb-4 text-lg'
+                        }, '💡 Örnek Kelimeler:'),
+                        React.createElement('div', {
+                            className: 'flex flex-wrap gap-3'
+                        }, exampleWords.map(word =>
+                            React.createElement('button', {
+                                key: word,
+                                onClick: () => setCurrentWord(word),
+                                className: 'px-4 py-2 bg-white border-2 border-gray-300 rounded-lg hover:border-purple-500 hover:bg-purple-50 font-bold text-gray-700 transition-all'
+                            }, word)
+                        ))
+                    ),
+                    
+                    // Info
+                    React.createElement('div', {
+                        className: 'mt-6 text-center text-sm text-gray-500 space-y-2'
+                    },
+                        React.createElement('p', null, 'Console\'u açın (F12) ve API çağrılarını izleyin'),
+                        React.createElement('p', {
+                            className: 'font-mono text-xs'
+                        }, 'Backend: kaleidoscopic-bienenstitch-3cb160.netlify.app')
+                    )
+                )
+            );
+        }
+        
+        // Render
+        const root = createRoot(document.getElementById('root'));
+        root.render(React.createElement(KeliMania));
+    </script>
+</body>
+</html>
