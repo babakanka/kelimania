@@ -51,8 +51,9 @@
     <div id="root"></div>
     
     <script>
-// KeliMania - Pure React.createElement (No Babel)
-const { useState, useEffect } = React;
+const h = React.createElement;
+// KeliMania - Pure React (No Babel) - Fixed Version
+const { useState } = React;
 const { createRoot } = ReactDOM;
 
 const BOARD_SIZE = 15;
@@ -66,92 +67,57 @@ const POINTS = {
 
 const LETTERS = ['A','B','C','Ç','D','E','F','G','Ğ','H','I','İ','J','K','L','M','N','O','Ö','P','R','S','Ş','T','U','Ü','V','Y','Z'];
 
-// TDK Backend
 const wordCache = new Map();
 
 const checkWordWithTDK = async (word) => {
   const normalized = word.toUpperCase().trim();
   if (normalized.length < 2) return false;
   
-  console.log('🔍 Kelime kontrol:', normalized);
-  
   if (wordCache.has(normalized)) {
-    const result = wordCache.get(normalized);
-    console.log('💾 Cache:', normalized, result ? '✅' : '❌');
-    return result;
+    return wordCache.get(normalized);
   }
   
   try {
-    const apiUrl = `https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word=${encodeURIComponent(normalized)}`;
-    console.log('🌐 Backend API çağrısı:', apiUrl);
-    
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      signal: controller.signal
-    });
-    
-    clearTimeout(timeoutId);
-    
+    const apiUrl = 'https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word=' + encodeURIComponent(normalized);
+    const response = await fetch(apiUrl);
     if (!response.ok) {
-      console.error('❌ API hatası:', response.status);
       wordCache.set(normalized, false);
       return false;
     }
-    
     const data = await response.json();
-    console.log('📦 API yanıtı:', data);
-    
     const isValid = data.valid === true;
-    console.log(isValid ? '✅ GEÇERLİ' : '❌ GEÇERSİZ', normalized);
-    
     wordCache.set(normalized, isValid);
     return isValid;
-    
   } catch (error) {
-    console.error('💥 Hata:', error.message);
     wordCache.set(normalized, false);
     return false;
   }
 };
 
 function Game() {
-  // State initialization
+  const h = React.createElement;
+  
   const initBag = () => {
-    const newBag = [];
-    LETTERS.forEach(l => { 
-      for(let i=0; i<3; i++) newBag.push(l);
-    });
-    for(let i=0; i<3; i++) newBag.push('*');
-    return newBag.sort(() => Math.random()-0.5);
+    const b = [];
+    LETTERS.forEach(l => { for(let i=0;i<3;i++) b.push(l); });
+    for(let i=0;i<3;i++) b.push('*');
+    return b.sort(() => Math.random()-0.5);
   };
-
+  
   const ensureVowels = (hand) => {
-    const vowels = ['A', 'E', 'I', 'İ', 'O', 'Ö', 'U', 'Ü'];
-    const vowelCount = hand.filter(l => vowels.includes(l)).length;
-    if(vowelCount >= 2) return hand;
-    
-    const newHand = [...hand];
-    const needed = 2 - vowelCount;
-    const consonantIndices = [];
-    
-    newHand.forEach((l, i) => {
-      if(!vowels.includes(l) && l !== '*') {
-        consonantIndices.push(i);
-      }
-    });
-    
-    const shuffledConsonants = consonantIndices.sort(() => Math.random() - 0.5);
-    for(let i = 0; i < needed && i < shuffledConsonants.length; i++) {
-      const randomVowel = vowels[Math.floor(Math.random() * vowels.length)];
-      newHand[shuffledConsonants[i]] = randomVowel;
+    const vowels = ['A','E','I','İ','O','Ö','U','Ü'];
+    const vc = hand.filter(l => vowels.includes(l)).length;
+    if(vc >= 2) return hand;
+    const nh = [...hand];
+    const ci = [];
+    nh.forEach((l,i) => { if(!vowels.includes(l) && l !== '*') ci.push(i); });
+    const sc = ci.sort(() => Math.random()-0.5);
+    for(let i=0; i<(2-vc) && i<sc.length; i++) {
+      nh[sc[i]] = vowels[Math.floor(Math.random()*vowels.length)];
     }
-    
-    return newHand;
+    return nh;
   };
-
+  
   const [bag, setBag] = useState(initBag);
   const [p1Hand, setP1Hand] = useState(() => ensureVowels(bag.slice(0,7)));
   const [p2Hand, setP2Hand] = useState(() => ensureVowels(bag.slice(7,14)));
@@ -163,7 +129,7 @@ function Game() {
   const [msg, setMsg] = useState('');
   const [dragLetter, setDragLetter] = useState(null);
   const [checking, setChecking] = useState(false);
-  const [wordPreview, setWordPreview] = useState({ valid: [], invalid: [] });
+  const [wordPreview, setWordPreview] = useState({valid:[],invalid:[]});
   const [jokerIdx, setJokerIdx] = useState(null);
   const [showJokerModal, setShowJokerModal] = useState(false);
   const [swapMode, setSwapMode] = useState(false);
@@ -174,91 +140,59 @@ function Game() {
   
   const p1Color = '#ef4444';
   const p2Color = '#eab308';
-
-  // Helper functions
+  
   const isValid = (r,c,color) => {
     if(board[r][c]) return false;
     if(temp.find(t=>t.r===r&&t.c===c)) return false;
-    
-    const directNeighbors = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
-    for(const [nr,nc] of directNeighbors) {
+    const dn = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+    for(const [nr,nc] of dn) {
       if(nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) continue;
-      
       const n = board[nr][nc];
       if(n && n.color!==color) return false;
-      
       const nt = temp.find(t=>t.r===nr&&t.c===nc);
       if(nt && nt.color!==color) return false;
     }
     return true;
   };
-
-  const findWordsWithTemp = (tempTiles) => {
+  
+  const findWords = (tempTiles) => {
     if(tempTiles.length === 0) return [];
-    
     const tb = board.map(row => [...row]);
-    tempTiles.forEach(t => {
-      tb[t.r][t.c] = {letter: t.letter, isNew: true};
-    });
-    
+    tempTiles.forEach(t => { tb[t.r][t.c] = {letter:t.letter,isNew:true}; });
     const words = [];
-    
     for(let r=0; r<BOARD_SIZE; r++) {
       let w='',hn=false;
       for(let c=0; c<BOARD_SIZE; c++) {
-        if(tb[r][c]) { 
-          w+=tb[r][c].letter; 
-          if(tb[r][c].isNew) hn=true; 
-        } else { 
-          if(w.length>=2&&hn) words.push(w); 
-          w=''; hn=false; 
-        }
+        if(tb[r][c]) { w+=tb[r][c].letter; if(tb[r][c].isNew) hn=true; }
+        else { if(w.length>=2&&hn) words.push(w); w=''; hn=false; }
       }
       if(w.length>=2&&hn) words.push(w);
     }
-    
     for(let c=0; c<BOARD_SIZE; c++) {
       let w='',hn=false;
       for(let r=0; r<BOARD_SIZE; r++) {
-        if(tb[r][c]) { 
-          w+=tb[r][c].letter; 
-          if(tb[r][c].isNew) hn=true; 
-        } else { 
-          if(w.length>=2&&hn) words.push(w); 
-          w=''; hn=false; 
-        }
+        if(tb[r][c]) { w+=tb[r][c].letter; if(tb[r][c].isNew) hn=true; }
+        else { if(w.length>=2&&hn) words.push(w); w=''; hn=false; }
       }
       if(w.length>=2&&hn) words.push(w);
     }
-    
     if(words.length===0 && tempTiles.length>0) {
       words.push(tempTiles.map(t=>t.letter).join(''));
     }
-    
     return [...new Set(words)];
   };
-
+  
   const checkWords = async (tempTiles) => {
-    if (tempTiles.length === 0) {
-      setWordPreview({ valid: [], invalid: [] });
-      return;
-    }
-    
-    const words = findWordsWithTemp(tempTiles);
-    const results = await Promise.all(
-      words.map(async (word) => ({
-        word,
-        valid: await checkWordWithTDK(word)
-      }))
-    );
-    
-    const valid = results.filter(r => r.valid).map(r => r.word);
-    const invalid = results.filter(r => !r.valid).map(r => r.word);
-    
-    setWordPreview({ valid, invalid });
+    if(tempTiles.length === 0) { setWordPreview({valid:[],invalid:[]}); return; }
+    const words = findWords(tempTiles);
+    const results = await Promise.all(words.map(async (w) => ({word:w,valid:await checkWordWithTDK(w)})));
+    setWordPreview({
+      valid: results.filter(r=>r.valid).map(r=>r.word),
+      invalid: results.filter(r=>!r.valid).map(r=>r.word)
+    });
   };
-
-  const calcScoreForTemp = (tempTiles) => {
+  
+  const calcScore = (tempTiles) => {
     let base=0,mult=1;
     tempTiles.forEach(t => {
       let pts = POINTS[t.letter]||0;
@@ -266,11 +200,9 @@ function Game() {
       if(DOUBLE_WORD.some(([x,y])=>x===t.r&&y===t.c)&&!board[t.r][t.c]) mult*=2;
       base+=pts;
     });
-    let sc = base*mult;
-    if(tempTiles.length===7) sc*=2;
-    return sc;
+    return (tempTiles.length===7 ? base*mult*2 : base*mult);
   };
-
+  
   const clickCell = (r,c) => {
     if(swapMode) return;
     const exist = temp.find(t=>t.r===r&&t.c===c);
@@ -285,7 +217,7 @@ function Game() {
     if(!isValid(r,c,color)) { 
       setMsg('⚠️ Rakibe çok yakın!'); 
       setTimeout(()=>setMsg(''),2000);
-      return; 
+      return;
     }
     if(dragLetter) {
       const newTemp = [...temp,{r,c,letter:dragLetter.letter,idx:dragLetter.idx,color,isJoker:dragLetter.isJoker||false}];
@@ -294,437 +226,272 @@ function Game() {
       setDragLetter(null);
     }
   };
-
+  
   const handlePlay = async () => {
     if(temp.length === 0) return;
     if(wordPreview.invalid.length > 0) {
-      setMsg('❌ Geçersiz kelime: ' + wordPreview.invalid.join(', '));
-      setTimeout(() => setMsg(''), 3000);
+      setMsg('❌ Geçersiz: ' + wordPreview.invalid.join(', '));
+      setTimeout(()=>setMsg(''),3000);
       return;
     }
-    
     setChecking(true);
-    
-    const newBoard = board.map(row => [...row]);
-    temp.forEach(t => {
-      newBoard[t.r][t.c] = {letter: t.letter, color: t.color, isJoker: t.isJoker};
-    });
-    
-    const score = calcScoreForTemp(temp);
-    
+    const nb = board.map(row => [...row]);
+    temp.forEach(t => { nb[t.r][t.c] = {letter:t.letter,color:t.color,isJoker:t.isJoker}; });
+    const score = calcScore(temp);
     if(turn === 1) {
       setP1Score(p1Score + score);
-      const usedIndices = temp.map(t => t.idx);
-      const newHand = p1Hand.filter((_, i) => !usedIndices.includes(i));
-      const drawn = bag.slice(0, Math.min(temp.length, bag.length));
-      setP1Hand(ensureVowels([...newHand, ...drawn]));
-      setBag(bag.slice(drawn.length));
+      const ui = temp.map(t => t.idx);
+      const nh = p1Hand.filter((_,i) => !ui.includes(i));
+      const dr = bag.slice(0, Math.min(temp.length, bag.length));
+      setP1Hand(ensureVowels([...nh, ...dr]));
+      setBag(bag.slice(dr.length));
     } else {
       setP2Score(p2Score + score);
-      const usedIndices = temp.map(t => t.idx);
-      const newHand = p2Hand.filter((_, i) => !usedIndices.includes(i));
-      const drawn = bag.slice(0, Math.min(temp.length, bag.length));
-      setP2Hand(ensureVowels([...newHand, ...drawn]));
-      setBag(bag.slice(drawn.length));
+      const ui = temp.map(t => t.idx);
+      const nh = p2Hand.filter((_,i) => !ui.includes(i));
+      const dr = bag.slice(0, Math.min(temp.length, bag.length));
+      setP2Hand(ensureVowels([...nh, ...dr]));
+      setBag(bag.slice(dr.length));
     }
-    
-    setBoard(newBoard);
+    setBoard(nb);
     setTemp([]);
-    setWordPreview({ valid: [], invalid: [] });
-    setMsg(`✅ +${score} puan!`);
-    setTimeout(() => setMsg(''), 2000);
-    setTurn(turn === 1 ? 2 : 1);
+    setWordPreview({valid:[],invalid:[]});
+    setMsg('✅ +' + score + ' puan!');
+    setTimeout(()=>setMsg(''),2000);
+    setTurn(turn===1?2:1);
     setPassCount(0);
     setChecking(false);
   };
-
+  
   const handlePass = () => {
-    const newPassCount = passCount + 1;
-    setPassCount(newPassCount);
-    
-    if(newPassCount >= 3) {
-      const otherPlayer = turn === 1 ? 2 : 1;
-      setWinner(otherPlayer);
+    const npc = passCount + 1;
+    setPassCount(npc);
+    if(npc >= 3) {
+      setWinner(turn===1?2:1);
       setShowWinner(true);
       return;
     }
-    
     setTemp([]);
-    setWordPreview({ valid: [], invalid: [] });
-    setTurn(turn === 1 ? 2 : 1);
-    setMsg('⏭️ Pas geçildi');
-    setTimeout(() => setMsg(''), 2000);
+    setWordPreview({valid:[],invalid:[]});
+    setTurn(turn===1?2:1);
+    setMsg('⏭️ Pas');
+    setTimeout(()=>setMsg(''),2000);
   };
-
+  
   const handleShuffle = () => {
-    if(turn === 1) {
-      setP1Hand([...p1Hand].sort(() => Math.random() - 0.5));
-    } else {
-      setP2Hand([...p2Hand].sort(() => Math.random() - 0.5));
-    }
+    if(turn===1) setP1Hand([...p1Hand].sort(()=>Math.random()-0.5));
+    else setP2Hand([...p2Hand].sort(()=>Math.random()-0.5));
   };
-
+  
   const handleSwap = () => {
-    if(selectedSwap.length === 0) return;
+    if(selectedSwap.length===0) return;
     if(bag.length < selectedSwap.length) {
-      setMsg('⚠️ Çantada yeterli harf yok');
-      setTimeout(() => setMsg(''), 2000);
+      setMsg('⚠️ Çanta yetersiz');
+      setTimeout(()=>setMsg(''),2000);
       return;
     }
-    
-    const hand = turn === 1 ? p1Hand : p2Hand;
-    const newHand = hand.filter((_, i) => !selectedSwap.includes(i));
-    const drawn = bag.slice(0, selectedSwap.length);
-    const returned = selectedSwap.map(i => hand[i]);
-    
-    if(turn === 1) {
-      setP1Hand(ensureVowels([...newHand, ...drawn]));
-    } else {
-      setP2Hand(ensureVowels([...newHand, ...drawn]));
-    }
-    
-    setBag([...bag.slice(drawn.length), ...returned].sort(() => Math.random() - 0.5));
+    const hand = turn===1 ? p1Hand : p2Hand;
+    const nh = hand.filter((_,i) => !selectedSwap.includes(i));
+    const dr = bag.slice(0, selectedSwap.length);
+    const ret = selectedSwap.map(i => hand[i]);
+    if(turn===1) setP1Hand(ensureVowels([...nh, ...dr]));
+    else setP2Hand(ensureVowels([...nh, ...dr]));
+    setBag([...bag.slice(dr.length), ...ret].sort(()=>Math.random()-0.5));
     setSwapMode(false);
     setSelectedSwap([]);
-    setTurn(turn === 1 ? 2 : 1);
-    setMsg('🔄 Harfler değiştirildi');
-    setTimeout(() => setMsg(''), 2000);
+    setTurn(turn===1?2:1);
+    setMsg('🔄 Değiştirildi');
+    setTimeout(()=>setMsg(''),2000);
   };
-
+  
   const handleUndo = () => {
     setTemp([]);
-    setWordPreview({ valid: [], invalid: [] });
+    setWordPreview({valid:[],invalid:[]});
   };
-
+  
   const handleReset = () => {
-    const newBag = initBag();
-    setBag(newBag);
-    setP1Hand(ensureVowels(newBag.slice(0,7)));
-    setP2Hand(ensureVowels(newBag.slice(7,14)));
-    setBoard(Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
+    const nb = initBag();
+    setBag(nb);
+    setP1Hand(ensureVowels(nb.slice(0,7)));
+    setP2Hand(ensureVowels(nb.slice(7,14)));
+    setBoard(Array(BOARD_SIZE).fill(null).map(()=>Array(BOARD_SIZE).fill(null)));
     setTemp([]);
     setTurn(1);
     setP1Score(0);
     setP2Score(0);
     setMsg('');
-    setWordPreview({ valid: [], invalid: [] });
+    setWordPreview({valid:[],invalid:[]});
     setPassCount(0);
     setShowWinner(false);
     setWinner(null);
   };
-
+  
   const handleForfeit = () => {
-    const otherPlayer = turn === 1 ? 2 : 1;
-    setWinner(otherPlayer);
+    setWinner(turn===1?2:1);
     setShowWinner(true);
   };
-
-  const currentHand = turn === 1 ? p1Hand : p2Hand;
-  const tempScore = calcScoreForTemp(temp);
-
-  // Render board cell
-  const renderCell = (r, c) => {
-    const tile = board[r][c];
-    const tempTile = temp.find(t => t.r === r && t.c === c);
-    const isTripleLetter = TRIPLE_LETTER.some(([x,y]) => x===r && y===c);
-    const isDoubleWord = DOUBLE_WORD.some(([x,y]) => x===r && y===c);
-    const isCenterStar = r===7 && c===7;
-    
-    let cellClass = 'board-cell text-xs sm:text-sm';
-    if(tile || tempTile) {
-      cellClass += ' font-bold';
-    } else if(isTripleLetter) {
-      cellClass += ' triple-letter';
-    } else if(isDoubleWord) {
-      cellClass += ' double-word';
-    } else if(isCenterStar) {
-      cellClass += ' center-star';
-    } else {
-      cellClass += ' bg-yellow-50';
-    }
-    
-    const displayTile = tempTile || tile;
-    
-    return React.createElement('div', {
-      key: `${r}-${c}`,
-      className: cellClass,
-      onClick: () => clickCell(r, c),
-      style: displayTile ? { 
-        backgroundColor: displayTile.color,
-        color: 'white',
-        cursor: 'pointer'
-      } : { cursor: 'pointer' }
-    },
-      displayTile ? 
-        displayTile.letter + (displayTile.isJoker ? '★' : '') :
-        isTripleLetter ? '3×H' :
-        isDoubleWord ? '2×K' :
-        isCenterStar ? '★' : 
-        ''
-    );
-  };
-
-  // Render letter tile
-  const renderLetterTile = (letter, idx) => {
-    const isUsed = temp.some(t => t.idx === idx);
-    const isSelected = selectedSwap.includes(idx);
-    
-    return React.createElement('div', {
-      key: idx,
-      draggable: !isUsed && !swapMode,
-      onDragStart: (e) => {
-        if(isUsed) return;
-        if(letter === '*') {
-          e.preventDefault();
-          setJokerIdx(idx);
-          setShowJokerModal(true);
-        } else {
-          setDragLetter({letter, idx});
-        }
-      },
-      onClick: () => {
-        if(swapMode) {
-          if(isSelected) {
-            setSelectedSwap(selectedSwap.filter(i => i !== idx));
-          } else {
-            setSelectedSwap([...selectedSwap, idx]);
-          }
-        }
-      },
-      className: `w-10 h-10 sm:w-11 sm:h-11 flex flex-col items-center justify-center border-2 rounded font-bold text-sm relative ${
-        isUsed ? 'opacity-30 cursor-not-allowed border-gray-300' : 
-        isSelected ? 'border-blue-500 bg-blue-100' :
-        'border-amber-600 bg-gradient-to-br from-yellow-100 to-amber-200 cursor-move hover:scale-105'
-      }`,
-      style: { transition: 'all 0.2s' }
-    },
-      letter === '*' ? '★' : letter,
-      !isUsed && letter !== '*' && React.createElement('span', {
-        className: 'absolute bottom-0 right-0.5 text-[8px] text-gray-600'
-      }, POINTS[letter] || 0)
-    );
-  };
-
-  // Main render
-  return React.createElement('div', {
-    className: 'min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-600 p-2 sm:p-4'
-  },
-    // Header
-    React.createElement('div', { className: 'max-w-7xl mx-auto' },
-      React.createElement('div', { className: 'bg-white/10 backdrop-blur rounded-xl p-2 sm:p-3 mb-2 sm:mb-4' },
-        React.createElement('div', { className: 'flex justify-between items-center gap-2' },
-          // Player 1
-          React.createElement('div', {
-            className: `flex-1 flex items-center justify-between px-2 py-1.5 rounded-lg ${turn===1?'bg-red-500':'bg-red-400/50'} text-white text-sm`
-          },
-            React.createElement('div', { className: 'flex items-center gap-1.5' },
-              React.createElement('div', {
-                className: 'w-5 h-5 bg-white rounded-full flex items-center justify-center text-red-500 font-bold text-xs'
-              }, '1'),
-              React.createElement('span', { className: 'font-bold' }, 
-                `Oyuncu 1: ${p1Score}`
-              )
+  
+  const currentHand = turn===1 ? p1Hand : p2Hand;
+  const tempScore = calcScore(temp);
+  
+  return h('div', {className:'min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-600 p-2 sm:p-4'},
+    h('div', {className:'max-w-7xl mx-auto'},
+      h('div', {className:'bg-white/10 backdrop-blur rounded-xl p-2 sm:p-3 mb-2 sm:mb-4'},
+        h('div', {className:'flex justify-between items-center gap-2'},
+          h('div', {className:'flex-1 flex items-center justify-between px-2 py-1.5 rounded-lg ' + (turn===1?'bg-red-500':'bg-red-400/50') + ' text-white text-sm'},
+            h('div', {className:'flex items-center gap-1.5'},
+              h('div', {className:'w-5 h-5 bg-white rounded-full flex items-center justify-center text-red-500 font-bold text-xs'}, '1'),
+              h('span', {className:'font-bold'}, 'Oyuncu 1: ' + p1Score)
             )
           ),
-          
-          // Player 2
-          React.createElement('div', {
-            className: `flex-1 flex items-center justify-between px-2 py-1.5 rounded-lg ${turn===2?'bg-yellow-500':'bg-yellow-400/50'} text-white text-sm`
-          },
-            React.createElement('div', { className: 'flex items-center gap-1.5' },
-              React.createElement('div', {
-                className: 'w-5 h-5 bg-white rounded-full flex items-center justify-center text-yellow-600 font-bold text-xs'
-              }, '2'),
-              React.createElement('span', { className: 'font-bold' }, 
-                `Oyuncu 2: ${p2Score}`
-              )
+          h('div', {className:'flex-1 flex items-center justify-between px-2 py-1.5 rounded-lg ' + (turn===2?'bg-yellow-500':'bg-yellow-400/50') + ' text-white text-sm'},
+            h('div', {className:'flex items-center gap-1.5'},
+              h('div', {className:'w-5 h-5 bg-white rounded-full flex items-center justify-center text-yellow-600 font-bold text-xs'}, '2'),
+              h('span', {className:'font-bold'}, 'Oyuncu 2: ' + p2Score)
             )
           )
         ),
-        React.createElement('div', { className: 'text-white text-center mt-1 text-xs opacity-80' }, 
-          `Çanta: ${bag.length}`
+        h('div', {className:'text-white text-center mt-1 text-xs opacity-80'}, 'Çanta: ' + bag.length)
+      ),
+      msg && h('div', {className:'text-center mb-4'},
+        h('div', {className:'inline-block bg-white px-4 py-2 rounded-lg shadow-lg font-bold'}, msg)
+      ),
+      showWinner && h('div', {className:'fixed inset-0 bg-black/50 flex items-center justify-center z-50'},
+        h('div', {className:'bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md'},
+          h('div', {className:'text-6xl mb-4'}, '🏆'),
+          h('h2', {className:'text-3xl font-bold mb-4'}, 'Oyuncu ' + winner + ' Kazandı!'),
+          h('p', {className:'text-xl mb-2'}, 'Oyuncu 1: ' + p1Score + ' puan'),
+          h('p', {className:'text-xl mb-6'}, 'Oyuncu 2: ' + p2Score + ' puan'),
+          h('button', {onClick:handleReset, className:'bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 text-xl'}, 'Yeni Oyun')
         )
       ),
-
-      // Message
-      msg && React.createElement('div', { className: 'text-center mb-4' },
-        React.createElement('div', { className: 'inline-block bg-white px-4 py-2 rounded-lg shadow-lg font-bold' }, 
-          msg
-        )
-      ),
-
-      // Winner Modal
-      showWinner && React.createElement('div', {
-        className: 'fixed inset-0 bg-black/50 flex items-center justify-center z-50'
-      },
-        React.createElement('div', {
-          className: 'bg-white p-8 rounded-2xl shadow-2xl text-center max-w-md'
-        },
-          React.createElement('div', { className: 'text-6xl mb-4' }, '🏆'),
-          React.createElement('h2', { className: 'text-3xl font-bold mb-4' }, 
-            `Oyuncu ${winner} Kazandı!`
-          ),
-          React.createElement('p', { className: 'text-xl mb-2' }, 
-            `Oyuncu 1: ${p1Score} puan`
-          ),
-          React.createElement('p', { className: 'text-xl mb-6' }, 
-            `Oyuncu 2: ${p2Score} puan`
-          ),
-          React.createElement('button', {
-            onClick: handleReset,
-            className: 'bg-green-600 text-white px-8 py-3 rounded-lg font-bold hover:bg-green-700 text-xl'
-          }, 'Yeni Oyun')
-        )
-      ),
-
-      // Main game area
-      React.createElement('div', { className: 'flex gap-2 flex-wrap justify-center items-start' },
-        // Board
-        React.createElement('div', { className: 'bg-white p-2 sm:p-4 rounded-xl shadow-2xl' },
-          React.createElement('div', {
-            className: 'grid gap-0',
-            style: {
-              gridTemplateColumns: `repeat(${BOARD_SIZE}, minmax(0, 1fr))`,
-              width: 'min(95vw, 800px)',
-              aspectRatio: '1'
-            }
+      h('div', {className:'flex gap-2 flex-wrap justify-center items-start'},
+        h('div', {className:'bg-white p-2 sm:p-4 rounded-xl shadow-2xl'},
+          h('div', {
+            className:'grid gap-0',
+            style:{gridTemplateColumns:'repeat('+BOARD_SIZE+', minmax(0, 1fr))',width:'min(95vw, 800px)',aspectRatio:'1'}
           },
-            ...Array(BOARD_SIZE).fill(null).map((_, r) =>
-              Array(BOARD_SIZE).fill(null).map((__, c) => renderCell(r, c))
+            ...Array(BOARD_SIZE).fill(null).map((_,r) => 
+              Array(BOARD_SIZE).fill(null).map((__,c) => {
+                const tile = board[r][c];
+                const tempTile = temp.find(t => t.r===r && t.c===c);
+                const isTL = TRIPLE_LETTER.some(([x,y]) => x===r&&y===c);
+                const isDW = DOUBLE_WORD.some(([x,y]) => x===r&&y===c);
+                const isCS = r===7 && c===7;
+                let cc = 'board-cell text-xs sm:text-sm';
+                if(tile||tempTile) cc += ' font-bold';
+                else if(isTL) cc += ' triple-letter';
+                else if(isDW) cc += ' double-word';
+                else if(isCS) cc += ' center-star';
+                else cc += ' bg-yellow-50';
+                const dt = tempTile||tile;
+                return h('div', {
+                  key:r+'-'+c,
+                  className:cc,
+                  onClick:()=>clickCell(r,c),
+                  style:dt ? {backgroundColor:dt.color,color:'white',cursor:'pointer'} : {cursor:'pointer'}
+                }, dt ? dt.letter+(dt.isJoker?'★':'') : isTL?'3×H':isDW?'2×K':isCS?'★':'');
+              })
             ).flat()
           )
         ),
-
-        // Right panel
-        React.createElement('div', { className: 'bg-white p-2 sm:p-4 rounded-xl shadow-2xl w-full sm:w-64' },
-          // Hand
-          React.createElement('div', { className: 'mb-3' },
-            React.createElement('h3', { className: 'font-bold mb-2 text-sm' }, 
-              `Oyuncu ${turn} - El Taşları`
-            ),
-            React.createElement('div', { className: 'flex gap-1 flex-wrap justify-center' },
-              ...currentHand.map((letter, idx) => renderLetterTile(letter, idx))
+        h('div', {className:'bg-white p-2 sm:p-4 rounded-xl shadow-2xl w-full sm:w-64'},
+          h('div', {className:'mb-3'},
+            h('h3', {className:'font-bold mb-2 text-sm'}, 'Oyuncu ' + turn + ' - El Taşları'),
+            h('div', {className:'flex gap-1 flex-wrap justify-center'},
+              ...currentHand.map((letter,idx) => {
+                const isUsed = temp.some(t => t.idx===idx);
+                const isSelected = selectedSwap.includes(idx);
+                return h('div', {
+                  key:idx,
+                  draggable:!isUsed && !swapMode,
+                  onDragStart:(e) => {
+                    if(isUsed) return;
+                    if(letter==='*') {
+                      e.preventDefault();
+                      setJokerIdx(idx);
+                      setShowJokerModal(true);
+                    } else {
+                      setDragLetter({letter,idx});
+                    }
+                  },
+                  onClick:() => {
+                    if(swapMode) {
+                      if(isSelected) setSelectedSwap(selectedSwap.filter(i=>i!==idx));
+                      else setSelectedSwap([...selectedSwap,idx]);
+                    }
+                  },
+                  className:'w-10 h-10 sm:w-11 sm:h-11 flex flex-col items-center justify-center border-2 rounded font-bold text-sm relative ' + 
+                    (isUsed ? 'opacity-30 cursor-not-allowed border-gray-300' :
+                     isSelected ? 'border-blue-500 bg-blue-100' :
+                     'border-amber-600 bg-gradient-to-br from-yellow-100 to-amber-200 cursor-move hover:scale-105'),
+                  style:{transition:'all 0.2s'}
+                },
+                  letter==='*' ? '★' : letter,
+                  !isUsed && letter!=='*' && h('span', {className:'absolute bottom-0 right-0.5 text-[8px] text-gray-600'}, POINTS[letter]||0)
+                );
+              })
             )
           ),
-
-          // Preview
-          wordPreview.valid.length > 0 || wordPreview.invalid.length > 0 ? 
-            React.createElement('div', { className: 'mb-3 p-2 bg-gray-50 rounded text-xs' },
-              wordPreview.valid.length > 0 && React.createElement('div', { className: 'text-green-600 font-bold' },
-                '✅ ', wordPreview.valid.join(', ')
-              ),
-              wordPreview.invalid.length > 0 && React.createElement('div', { className: 'text-red-600 font-bold' },
-                '❌ ', wordPreview.invalid.join(', ')
-              ),
-              temp.length > 0 && React.createElement('div', { className: 'text-blue-600 font-bold mt-1' },
-                `+${tempScore} puan`
-              )
-            ) : null,
-
-          // Buttons grid
-          React.createElement('div', { className: 'space-y-2' },
-            // Main play button
-            temp.length > 0 && React.createElement('button', {
-              onClick: handlePlay,
-              disabled: checking || wordPreview.invalid.length > 0,
-              className: 'w-full bg-green-600 text-white p-2 rounded flex items-center justify-center hover:bg-green-700 disabled:opacity-50 shadow-lg active:scale-95 font-bold'
+          (wordPreview.valid.length>0 || wordPreview.invalid.length>0) && h('div', {className:'mb-3 p-2 bg-gray-50 rounded text-xs'},
+            wordPreview.valid.length>0 && h('div', {className:'text-green-600 font-bold'}, '✅ ' + wordPreview.valid.join(', ')),
+            wordPreview.invalid.length>0 && h('div', {className:'text-red-600 font-bold'}, '❌ ' + wordPreview.invalid.join(', ')),
+            temp.length>0 && h('div', {className:'text-blue-600 font-bold mt-1'}, '+' + tempScore + ' puan')
+          ),
+          h('div', {className:'space-y-2'},
+            temp.length>0 && h('button', {
+              onClick:handlePlay,
+              disabled:checking||wordPreview.invalid.length>0,
+              className:'w-full bg-green-600 text-white p-2 rounded flex items-center justify-center hover:bg-green-700 disabled:opacity-50 shadow-lg active:scale-95 font-bold'
             }, checking ? '⏳ Kontrol...' : '▶️ Oyna'),
-
-            // 4-button grid
-            React.createElement('div', { className: 'grid grid-cols-2 gap-1' },
-              React.createElement('button', {
-                onClick: handleUndo,
-                disabled: temp.length === 0,
-                className: 'flex-1 bg-orange-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-orange-600 disabled:opacity-50 shadow-sm active:scale-95 text-xs'
-              }, '↶ Geri'),
-
-              React.createElement('button', {
-                onClick: handleShuffle,
-                disabled: temp.length > 0,
-                className: 'flex-1 bg-gray-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-gray-600 shadow-sm active:scale-95 text-xs'
-              }, '🔀 Karıştır'),
-
-              swapMode ? 
-                React.createElement('button', {
-                  onClick: handleSwap,
-                  disabled: selectedSwap.length === 0,
-                  className: 'flex-1 bg-blue-600 text-white p-1.5 rounded flex items-center justify-center hover:bg-blue-700 disabled:opacity-50 shadow-sm active:scale-95 text-xs'
-                }, `✓ Değiştir (${selectedSwap.length})`) :
-                React.createElement('button', {
-                  onClick: () => setSwapMode(true),
-                  disabled: temp.length > 0,
-                  className: 'flex-1 bg-blue-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-blue-600 disabled:opacity-50 shadow-sm active:scale-95 text-xs'
-                }, '🔄 Değiştir'),
-
-              React.createElement('button', {
-                onClick: handlePass,
-                className: 'flex-1 bg-gray-600 text-white p-1.5 rounded flex items-center justify-center hover:bg-gray-700 shadow-sm active:scale-95 text-xs'
-              }, '⏭️ Pas', passCount > 0 && React.createElement('div', {
-                className: 'bg-red-100 text-red-700 px-1 py-0.5 rounded text-[9px] text-center'
-              }, `⚠️`)
+            h('div', {className:'grid grid-cols-2 gap-1'},
+              h('button', {onClick:handleUndo, disabled:temp.length===0, className:'flex-1 bg-orange-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-orange-600 disabled:opacity-50 shadow-sm active:scale-95 text-xs'}, '↶ Geri'),
+              h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'flex-1 bg-gray-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-gray-600 shadow-sm active:scale-95 text-xs'}, '🔀 Karıştır'),
+              swapMode ?
+                h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'flex-1 bg-blue-600 text-white p-1.5 rounded flex items-center justify-center hover:bg-blue-700 disabled:opacity-50 shadow-sm active:scale-95 text-xs'}, '✓ Değiştir ('+selectedSwap.length+')') :
+                h('button', {onClick:()=>setSwapMode(true), disabled:temp.length>0, className:'flex-1 bg-blue-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-blue-600 disabled:opacity-50 shadow-sm active:scale-95 text-xs'}, '🔄 Değiştir'),
+              h('button', {onClick:handlePass, className:'flex-1 bg-gray-600 text-white p-1.5 rounded flex items-center justify-center hover:bg-gray-700 shadow-sm active:scale-95 text-xs'}, '⏭️ Pas' + (passCount>0 ? ' ⚠️' : ''))
             ),
-
-            // Bottom buttons
-            React.createElement('div', { className: 'grid grid-cols-2 gap-1' },
-              React.createElement('button', {
-                onClick: handleReset,
-                className: 'bg-red-500 text-white p-1.5 rounded flex flex-col items-center justify-center hover:bg-red-600 disabled:opacity-50 shadow-sm active:scale-95 text-xs'
-              }, '🔄', React.createElement('span', { className: 'text-[9px]' }, 'Yenile')),
-
-              React.createElement('button', {
-                onClick: handleForfeit,
-                className: 'bg-blue-500 text-white p-1.5 rounded flex flex-col items-center justify-center hover:bg-blue-600 disabled:opacity-50 shadow-sm active:scale-95 text-xs'
-              }, '🏳️', React.createElement('span', { className: 'text-[9px]' }, 'Pes Et'))
+            h('div', {className:'grid grid-cols-2 gap-1'},
+              h('button', {onClick:handleReset, className:'bg-red-500 text-white p-1.5 rounded flex flex-col items-center justify-center hover:bg-red-600 shadow-sm active:scale-95 text-xs'}, '🔄', h('span', {className:'text-[9px]'}, 'Yenile')),
+              h('button', {onClick:handleForfeit, className:'bg-blue-500 text-white p-1.5 rounded flex flex-col items-center justify-center hover:bg-blue-600 shadow-sm active:scale-95 text-xs'}, '🏳️', h('span', {className:'text-[9px]'}, 'Pes Et'))
             )
           )
         )
       )
     ),
-
-    // Joker Modal
-    showJokerModal && React.createElement('div', {
-      className: 'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'
-    },
-      React.createElement('div', { className: 'bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full' },
-        React.createElement('h3', { className: 'text-xl font-bold mb-4 text-center' }, 
-          'Joker Harfi Seç'
-        ),
-        React.createElement('div', { className: 'grid grid-cols-7 gap-2 mb-4' },
+    showJokerModal && h('div', {className:'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'},
+      h('div', {className:'bg-white p-6 rounded-2xl shadow-2xl max-w-md w-full'},
+        h('h3', {className:'text-xl font-bold mb-4 text-center'}, 'Joker Harfi Seç'),
+        h('div', {className:'grid grid-cols-7 gap-2 mb-4'},
           ...LETTERS.map(letter => 
-            React.createElement('button', {
-              key: letter,
-              onClick: () => {
-                const hand = turn === 1 ? p1Hand : p2Hand;
-                const newHand = [...hand];
-                newHand[jokerIdx] = letter;
-                if(turn === 1) {
-                  setP1Hand(newHand);
-                } else {
-                  setP2Hand(newHand);
-                }
+            h('button', {
+              key:letter,
+              onClick:() => {
+                const hand = turn===1 ? p1Hand : p2Hand;
+                const nh = [...hand];
+                nh[jokerIdx] = letter;
+                if(turn===1) setP1Hand(nh);
+                else setP2Hand(nh);
                 setShowJokerModal(false);
                 setJokerIdx(null);
-                setDragLetter({letter, idx: jokerIdx, isJoker: true});
+                setDragLetter({letter,idx:jokerIdx,isJoker:true});
               },
-              className: 'aspect-square bg-gradient-to-br from-yellow-100 to-amber-200 border-2 border-amber-600 rounded font-bold hover:scale-105 active:scale-95'
+              className:'aspect-square bg-gradient-to-br from-yellow-100 to-amber-200 border-2 border-amber-600 rounded font-bold hover:scale-105 active:scale-95'
             }, letter)
           )
         ),
-        React.createElement('button', {
-          onClick: () => {
-            setShowJokerModal(false);
-            setJokerIdx(null);
-          },
-          className: 'w-full bg-gray-500 text-white py-2 rounded font-bold hover:bg-gray-600'
+        h('button', {
+          onClick:() => { setShowJokerModal(false); setJokerIdx(null); },
+          className:'w-full bg-gray-500 text-white py-2 rounded font-bold hover:bg-gray-600'
         }, 'İptal')
       )
     )
   );
 }
 
-// Initialize
 const root = createRoot(document.getElementById('root'));
-root.render(React.createElement(Game));
+root.render(h(Game));
     </script>
 </body>
 </html>
