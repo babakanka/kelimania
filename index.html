@@ -38,25 +38,25 @@
             flex-direction: column;
         }
         
-        /* Score Bar - Compact */
+        /* Score Bar - With Territory % */
         .score-bar {
             display: flex;
-            gap: 6px;
-            padding: 6px;
+            gap: 4px;
+            padding: 6px 8px;
             background: transparent;
         }
         
         .score-item {
             flex: 1;
-            padding: 10px 14px;
-            border-radius: 14px;
+            padding: 8px 10px;
+            border-radius: 12px;
             display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 15px;
+            flex-direction: column;
+            gap: 2px;
             font-weight: 900;
             color: white;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            transition: all 0.2s;
         }
         
         .score-item.p1 {
@@ -72,23 +72,35 @@
             transform: scale(1.02);
         }
         
+        .score-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 13px;
+        }
+        
+        .score-bottom {
+            font-size: 18px;
+            font-weight: 900;
+        }
+        
         .bag-info {
-            padding: 10px 14px;
-            border-radius: 14px;
+            padding: 8px 10px;
+            border-radius: 12px;
             background: rgba(255,255,255,0.3);
             backdrop-filter: blur(10px);
-            font-size: 13px;
+            font-size: 11px;
             font-weight: 900;
             color: white;
             display: flex;
             align-items: center;
-            gap: 4px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            min-width: 70px;
             justify-content: center;
+            gap: 3px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            min-width: 60px;
         }
         
-        /* Board - VERTICAL RECTANGLE 12×18 */
+        /* Board */
         .board-container {
             flex: 1;
             display: flex;
@@ -177,29 +189,27 @@
             100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
         }
         
-        /* Hand Container */
+        /* Hand Container - NO OVERFLOW */
         .hand-container {
             display: flex;
-            gap: 7px;
+            gap: 5px;
             justify-content: center;
-            padding: 8px;
+            padding: 8px 6px;
             background: white;
-            overflow-x: auto;
-            overflow-y: hidden;
-            -webkit-overflow-scrolling: touch;
+            overflow: visible;
         }
         
         .letter-tile {
-            min-width: 54px;
-            width: 54px;
-            height: 54px;
+            width: 48px;
+            height: 48px;
+            flex-shrink: 0;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 11px;
+            border-radius: 10px;
             font-weight: 900;
-            font-size: 22px;
+            font-size: 20px;
             transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 
                 0 3px 8px rgba(0,0,0,0.18),
@@ -234,29 +244,41 @@
             transform: scale(0.95);
         }
         
-        /* Control Buttons */
+        .letter-points {
+            position: absolute;
+            bottom: 2px;
+            right: 3px;
+            font-size: 8px;
+            font-weight: 800;
+            color: rgba(107, 114, 128, 0.6);
+            background: rgba(255,255,255,0.7);
+            padding: 1px 3px;
+            border-radius: 3px;
+        }
+        
+        /* Control Buttons - WITH TEXT */
         .control-panel {
-            padding: 8px;
+            padding: 6px 8px;
             background: white;
             display: flex;
             flex-direction: column;
-            gap: 7px;
+            gap: 6px;
         }
         
         .btn {
-            padding: 11px;
-            border-radius: 11px;
+            padding: 10px 8px;
+            border-radius: 10px;
             border: none;
             font-weight: 900;
-            font-size: 14px;
+            font-size: 12px;
             transition: all 0.2s;
             box-shadow: 0 3px 8px rgba(0,0,0,0.18);
             touch-action: manipulation;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 6px;
             cursor: pointer;
+            white-space: nowrap;
         }
         
         .btn:active:not(:disabled) {
@@ -267,11 +289,16 @@
         .btn-primary {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            font-size: 15px;
+            font-size: 14px;
         }
         
         .btn-secondary {
             background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+        
+        .btn-danger {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
         }
         
@@ -360,14 +387,12 @@ const h = React.createElement;
 const { useState } = React;
 const { createRoot } = ReactDOM;
 
-// NEW: 12 columns × 18 rows
 const COLS = 12;
 const ROWS = 18;
 
-// Bonus squares repositioned for 12×18
 const TRIPLE_LETTER = [[2,2],[2,9],[9,2],[9,9],[5,5],[5,12],[11,5],[11,12]];
 const DOUBLE_WORD = [[5,2],[5,9],[11,2],[11,9],[3,6],[3,11],[13,6],[13,11]];
-const CENTER = [9, 6]; // Center star
+const CENTER = [9, 6];
 
 const POINTS = {
   A:1,B:5,C:6,Ç:6,D:4,E:1,F:8,G:5,Ğ:8,H:6,I:5,İ:5,J:10,K:3,L:3,M:4,
@@ -452,6 +477,31 @@ function Game() {
   const p1Color = '#ef4444';
   const p2Color = '#eab308';
   
+  // Calculate territory control
+  const getTerritoryControl = () => {
+    let p1Count = 0;
+    let p2Count = 0;
+    let totalOccupied = 0;
+    
+    for(let r=0; r<ROWS; r++) {
+      for(let c=0; c<COLS; c++) {
+        if(board[r][c]) {
+          totalOccupied++;
+          if(board[r][c].color === p1Color) p1Count++;
+          else if(board[r][c].color === p2Color) p2Count++;
+        }
+      }
+    }
+    
+    const total = ROWS * COLS;
+    const p1Pct = Math.round((p1Count / total) * 100);
+    const p2Pct = Math.round((p2Count / total) * 100);
+    
+    return { p1: p1Pct, p2: p2Pct };
+  };
+  
+  const territory = getTerritoryControl();
+  
   const isValid = (r,c,color) => {
     if(board[r][c]) return false;
     if(temp.find(t=>t.r===r&&t.c===c)) return false;
@@ -472,7 +522,6 @@ function Game() {
     tempTiles.forEach(t => { tb[t.r][t.c] = {letter:t.letter,isNew:true}; });
     const words = [];
     
-    // Horizontal
     for(let r=0; r<ROWS; r++) {
       let w='',hn=false;
       for(let c=0; c<COLS; c++) {
@@ -482,7 +531,6 @@ function Game() {
       if(w.length>=2&&hn) words.push(w);
     }
     
-    // Vertical
     for(let c=0; c<COLS; c++) {
       let w='',hn=false;
       for(let r=0; r<ROWS; r++) {
@@ -743,28 +791,33 @@ function Game() {
   const currentHand = turn===1 ? p1Hand : p2Hand;
   const tempScore = calcScore(temp);
   
-  // Calculate board size
   const maxWidth = window.innerWidth - 16;
-  const maxHeight = window.innerHeight - 240; // Leave space for score, hand, buttons
+  const maxHeight = window.innerHeight - 240;
   const cellSize = Math.min(maxWidth / COLS, maxHeight / ROWS);
   const boardWidth = cellSize * COLS;
   const boardHeight = cellSize * ROWS;
   
   return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh'}},
-    // Score Bar
+    // Score Bar with Territory %
     h('div', {className:'score-bar'},
       h('div', {className:'score-item p1' + (turn===1?' active':'')},
-        h('span', null, 'P1'),
-        h('span', null, p1Score)
+        h('div', {className:'score-top'},
+          h('span', null, 'P1'),
+          h('span', null, territory.p1 + '%')
+        ),
+        h('div', {className:'score-bottom'}, p1Score)
       ),
       h('div', {className:'bag-info'}, '🎒 ' + bag.length),
       h('div', {className:'score-item p2' + (turn===2?' active':'')},
-        h('span', null, 'P2'),
-        h('span', null, p2Score)
+        h('div', {className:'score-top'},
+          h('span', null, 'P2'),
+          h('span', null, territory.p2 + '%')
+        ),
+        h('div', {className:'score-bottom'}, p2Score)
       )
     ),
     
-    // Board - 12×18
+    // Board
     h('div', {className:'board-container'},
       (wordPreview.valid.length>0 || wordPreview.invalid.length>0 || temp.length>0) && h('div', {className:'word-tooltip'},
         wordPreview.valid.length>0 && h('div', {style:{color:'#059669',fontWeight:'900',fontSize:'11px',marginBottom:'4px'}}, '✅ ' + wordPreview.valid.join(', ')),
@@ -808,7 +861,7 @@ function Game() {
       )
     ),
     
-    // Hand
+    // Hand - FIXED WIDTH
     h('div', {className:'hand-container'},
       ...currentHand.map((letter,idx) => {
         const isUsed = temp.some(t => t.idx===idx);
@@ -837,33 +890,22 @@ function Game() {
           }
         },
           letter==='*' ? '⭐' : letter,
-          !isUsed && letter!=='*' && h('span', {
-            style:{
-              position:'absolute',
-              bottom:'5px',
-              right:'7px',
-              fontSize:'10px',
-              fontWeight:'900',
-              color:'#6b7280',
-              background:'rgba(255,255,255,0.95)',
-              padding:'2px 5px',
-              borderRadius:'5px'
-            }
-          }, POINTS[letter]||0)
+          !isUsed && letter!=='*' && h('span', {className:'letter-points'}, POINTS[letter]||0)
         );
       })
     ),
     
-    // Controls
+    // Controls - TEXT LABELS
     h('div', {className:'control-panel'},
-      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'7px'}},
-        temp.length>0 && h('button', {onClick:handlePlay, disabled:checking||wordPreview.invalid.length>0, className:'btn btn-primary', style:{gridColumn:'span 4'}}, checking ? '⏳ Kontrol' : '▶️ Oyna'),
-        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, '↶'),
-        h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn btn-secondary'}, '🔀'),
+      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(5, 1fr)',gap:'5px'}},
+        temp.length>0 && h('button', {onClick:handlePlay, disabled:checking||wordPreview.invalid.length>0, className:'btn btn-primary', style:{gridColumn:'span 5'}}, checking ? 'Kontrol...' : 'Oyna'),
+        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, 'İptal'),
+        h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn btn-secondary'}, 'Karıştır'),
         swapMode ?
-          h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, '✓ ' + selectedSwap.length) :
-          h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, '🔄'),
-        h('button', {onClick:handlePass, className:'btn btn-secondary'}, '⏭️')
+          h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiş ('+selectedSwap.length+')') :
+          h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiştir'),
+        h('button', {onClick:handlePass, className:'btn btn-secondary'}, 'Pas'),
+        h('button', {onClick:handleForfeit, className:'btn btn-danger'}, 'Pes Et')
       )
     ),
     
@@ -879,7 +921,7 @@ function Game() {
           h('p', {style:{fontSize:'20px',fontWeight:'900',marginBottom:'10px',color:'#ef4444'}}, 'P1: ' + p1Score + ' puan'),
           h('p', {style:{fontSize:'20px',fontWeight:'900',color:'#eab308'}}, 'P2: ' + p2Score + ' puan')
         ),
-        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'18px',fontSize:'18px'}}, '🔄 Yeni Oyun')
+        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'18px',fontSize:'18px'}}, 'Yeni Oyun')
       )
     ),
     
