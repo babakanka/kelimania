@@ -1,4 +1,3 @@
-// Vercel Serverless Function
 export default async function handler(req, res) {
   // CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -16,7 +15,6 @@ export default async function handler(req, res) {
   }
   
   try {
-    // TDK API'ye istek at
     const tdkUrl = `https://sozluk.gov.tr/gts?ara=${encodeURIComponent(word)}`;
     const response = await fetch(tdkUrl, {
       headers: {
@@ -34,7 +32,6 @@ export default async function handler(req, res) {
       });
     }
     
-    // TDK başarısız olursa false dön
     return res.status(200).json({ 
       valid: false,
       word: word,
@@ -42,7 +39,6 @@ export default async function handler(req, res) {
     });
     
   } catch (error) {
-    console.error('Error checking word:', error);
     return res.status(500).json({ 
       error: 'Internal server error',
       valid: false 
