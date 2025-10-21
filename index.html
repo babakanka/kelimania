@@ -189,8 +189,13 @@
             transition: all 0.15s;
             border-radius: 0px;
             background: #f7f7f5;
-            font-size: clamp(9px, 2.5vw, 13px);
+            font-size: clamp(12px, 3vw, 18px);
             cursor: pointer;
+            color: #000000;
+        }
+        
+        .board-cell[draggable="true"] {
+            cursor: move;
         }
         
         .board-cell:active {
@@ -204,16 +209,16 @@
         }
         
         .triple-letter { 
-            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            background: linear-gradient(135deg, #84cc16 0%, #65a30d 100%);
             color: white;
-            border-color: #2563eb;
+            border-color: #4d7c0f;
             font-weight: 900;
         }
         
         .double-word { 
-            background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+            background: linear-gradient(135deg, #fb923c 0%, #ea580c 100%);
             color: white;
-            border-color: #db2777;
+            border-color: #c2410c;
             font-weight: 900;
         }
         
@@ -433,9 +438,9 @@ const { createRoot } = ReactDOM;
 const COLS = 12;
 const ROWS = 18;
 
-const TRIPLE_LETTER = [[2,2],[2,9],[9,2],[9,9],[5,5],[5,12],[11,5],[11,12]];
-const DOUBLE_WORD = [[5,2],[5,9],[11,2],[11,9],[3,6],[3,11],[13,6],[13,11]];
-const CENTER = [9, 6];
+const TRIPLE_LETTER = [[3,1],[3,9],[7,5],[15,1],[15,9]];
+const DOUBLE_WORD = [[1,5],[9,1],[9,10],[11,5],[16,5]];
+const CENTER = null;
 
 const POINTS = {
   A:1,B:5,C:6,Ç:6,D:4,E:1,F:8,G:5,Ğ:8,H:6,I:5,İ:5,J:10,K:3,L:3,M:4,
@@ -560,11 +565,11 @@ function Game() {
   const [wordPreview, setWordPreview] = useState({valid:[],invalid:[]});
   const [jokerIdx, setJokerIdx] = useState(null);
   const [showJokerModal, setShowJokerModal] = useState(false);
+  const [jokerUsedIndices, setJokerUsedIndices] = useState([]);
   const [swapMode, setSwapMode] = useState(false);
   const [selectedSwap, setSelectedSwap] = useState([]);
   const [showWinner, setShowWinner] = useState(false);
   const [winner, setWinner] = useState(null);
-  const [passCount, setPassCount] = useState(0);
   const [dragTarget, setDragTarget] = useState(null);
   const [draggingIdx, setDraggingIdx] = useState(null);
   
@@ -675,7 +680,7 @@ function Game() {
     setDraggingIdx(idx);
     vibrate(20);
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', JSON.stringify({letter, idx}));
+    e.dataTransfer.setData('text/plain', JSON.stringify({letter, idx, fromBoard:false}));
   };
   
   const handleDragOver = (e, r, c) => {
@@ -697,22 +702,62 @@ function Game() {
     if(draggingIdx === null) return;
     
     const color = turn===1?p1Color:p2Color;
-    if(board[r][c] || temp.find(t=>t.r===r&&t.c===c)) return;
-    if(!isValid(r,c,color)) {
-      vibrate([50,50,50]);
-      setMsg('⚠️ Rakibe çok yakın!');
-      setTimeout(()=>setMsg(''),2000);
-      setDraggingIdx(null);
-      return;
-    }
     
     try {
       const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-      vibrate(30);
-      const newTemp = [...temp,{r,c,letter:data.letter,idx:data.idx,color,isJoker:false}];
-      setTemp(newTemp);
-      checkWords(newTemp);
-    } catch(err) {}
+      
+      // Tahtadan tahtaya taşıma
+      if(data.fromBoard) {
+        // Aynı yere bırakıldıysa hiçbir şey yapma
+        if(data.oldR === r && data.oldC === c) {
+          setDraggingIdx(null);
+          return;
+        }
+        
+        // Hedef hücre dolu mu kontrol et
+        if(board[r][c] || temp.find(t=>t.r===r&&t.c===c)) {
+          setDraggingIdx(null);
+          return;
+        }
+        
+        // Geçerli konum mu kontrol et
+        if(!isValid(r,c,color)) {
+          vibrate([50,50,50]);
+          setMsg('⚠️ Rakibe çok yakın!');
+          setTimeout(()=>setMsg(''),2000);
+          setDraggingIdx(null);
+          return;
+        }
+        
+        // Eski konumu kaldır, yeni konuma ekle
+        vibrate(20);
+        const newTemp = temp.filter(t=>!(t.r===data.oldR&&t.c===data.oldC));
+        newTemp.push({r,c,letter:data.letter,idx:data.idx,color,isJoker:data.isJoker});
+        setTemp(newTemp);
+        checkWords(newTemp);
+      } 
+      // Elden tahtaya taşıma
+      else {
+        if(board[r][c] || temp.find(t=>t.r===r&&t.c===c)) {
+          setDraggingIdx(null);
+          return;
+        }
+        if(!isValid(r,c,color)) {
+          vibrate([50,50,50]);
+          setMsg('⚠️ Rakibe çok yakın!');
+          setTimeout(()=>setMsg(''),2000);
+          setDraggingIdx(null);
+          return;
+        }
+        
+        vibrate(30);
+        const newTemp = [...temp,{r,c,letter:data.letter,idx:data.idx,color,isJoker:data.isJoker||false}];
+        setTemp(newTemp);
+        checkWords(newTemp);
+      }
+    } catch(err) {
+      console.error('Drop error:', err);
+    }
     setDraggingIdx(null);
   };
   
@@ -763,6 +808,24 @@ function Game() {
       setShowJokerModal(true);
       return;
     }
+    
+    // Eğer joker olarak seçilmiş bir harf ise ve henüz tahtada kullanılmamışsa geri alınabilir
+    const hand = turn===1 ? p1Hand : p2Hand;
+    const currentLetter = hand[idx];
+    const isJokerTransformed = jokerUsedIndices.includes(idx) && currentLetter !== '*';
+    
+    if(isJokerTransformed && !temp.some(t => t.idx === idx)) {
+      // Joker harfini geri * yapıyoruz
+      vibrate(30);
+      const nh = [...hand];
+      nh[idx] = '*';
+      if(turn===1) setP1Hand(nh);
+      else setP2Hand(nh);
+      setJokerUsedIndices(jokerUsedIndices.filter(i => i !== idx));
+      setSelectedLetter(null);
+      return;
+    }
+    
     setSelectedLetter({letter, idx});
   };
   
@@ -787,6 +850,7 @@ function Game() {
       const dr = bag.slice(0, Math.min(temp.length, bag.length));
       setP1Hand(ensureVowels([...nh, ...dr]));
       setBag(bag.slice(dr.length));
+      setJokerUsedIndices(jokerUsedIndices.filter(i => !ui.includes(i)));
     } else {
       setP2Score(p2Score + score);
       const ui = temp.map(t => t.idx);
@@ -794,6 +858,7 @@ function Game() {
       const dr = bag.slice(0, Math.min(temp.length, bag.length));
       setP2Hand(ensureVowels([...nh, ...dr]));
       setBag(bag.slice(dr.length));
+      setJokerUsedIndices(jokerUsedIndices.filter(i => !ui.includes(i)));
     }
     setBoard(nb);
     setTemp([]);
@@ -801,26 +866,7 @@ function Game() {
     setMsg('🎉 +' + score + ' puan');
     setTimeout(()=>setMsg(''),2000);
     setTurn(turn===1?2:1);
-    setPassCount(0);
     setChecking(false);
-  };
-  
-  const handlePass = () => {
-    vibrate(30);
-    const npc = passCount + 1;
-    setPassCount(npc);
-    if(npc >= 3) {
-      setWinner(turn===1?2:1);
-      setShowWinner(true);
-      vibrate([100,50,100]);
-      return;
-    }
-    setTemp([]);
-    setWordPreview({valid:[],invalid:[]});
-    setSelectedLetter(null);
-    setTurn(turn===1?2:1);
-    setMsg('⏭️ Pas');
-    setTimeout(()=>setMsg(''),2000);
   };
   
   const handleSwap = () => {
@@ -866,10 +912,10 @@ function Game() {
     setP2Score(0);
     setMsg('');
     setWordPreview({valid:[],invalid:[]});
-    setPassCount(0);
     setShowWinner(false);
     setWinner(null);
     setSelectedLetter(null);
+    setJokerUsedIndices([]);
   };
   
   const handleForfeit = () => {
@@ -927,21 +973,20 @@ function Game() {
             const tempTile = temp.find(t => t.r===r && t.c===c);
             const isTL = TRIPLE_LETTER.some(([x,y])=>x===r&&y===c);
             const isDW = DOUBLE_WORD.some(([x,y])=>x===r&&y===c);
-            const isCS = r===CENTER[0] && c===CENTER[1];
             const isDragOver = dragTarget && dragTarget.r===r && dragTarget.c===c;
             const dt = tempTile||tile;
             
             let cc = 'board-cell';
             if(isTL && !dt) cc += ' triple-letter';
             else if(isDW && !dt) cc += ' double-word';
-            else if(isCS && !dt) cc += ' center-star';
             if(isDragOver) cc += ' drag-over';
             
             let cellStyle = {};
             if(dt) {
               cellStyle = {
                 backgroundColor: dt.color,
-                color: 'white',
+                color: '#000000',
+                fontWeight: '900',
                 borderColor: dt.color === p1Color ? '#b91c1c' : '#a16207'
               };
             }
@@ -953,8 +998,23 @@ function Game() {
               onDragOver:(e)=>handleDragOver(e,r,c),
               onDragLeave:handleDragLeave,
               onDrop:(e)=>handleDrop(e,r,c),
+              draggable:!!tempTile,
+              onDragStart:(e)=>{
+                if(tempTile) {
+                  e.dataTransfer.setData('text/plain', JSON.stringify({
+                    letter:tempTile.letter,
+                    idx:tempTile.idx,
+                    fromBoard:true,
+                    oldR:r,
+                    oldC:c,
+                    isJoker:tempTile.isJoker
+                  }));
+                  setDraggingIdx(tempTile.idx);
+                }
+              },
+              onDragEnd:handleDragEnd,
               style:cellStyle
-            }, dt ? dt.letter+(dt.isJoker?'★':'') : isTL?'3H':isDW?'2K':isCS?'★':'');
+            }, dt ? dt.letter+(dt.isJoker?'★':'') : isTL?'3H':isDW?'2K':'');
           })
         ).flat()
       )
@@ -966,6 +1026,7 @@ function Game() {
         const isSelected = selectedSwap.includes(idx);
         const isActive = selectedLetter && selectedLetter.idx === idx;
         const isDragging = draggingIdx === idx;
+        const isJokerTransformed = jokerUsedIndices.includes(idx) && letter !== '*';
         return h('div', {
           key:idx,
           draggable:!isUsed && !swapMode,
@@ -980,27 +1041,29 @@ function Game() {
             border: isUsed ? '2px solid #d1d5db' :
                     isActive ? '4px solid #10b981' :
                     isSelected ? '4px solid #3b82f6' :
+                    isJokerTransformed ? '4px solid #a855f7' :
                     '3px solid #f59e0b',
             background: isUsed ? '#f3f4f6' :
                         isActive ? '#d1fae5' :
                         isSelected ? '#dbeafe' :
+                        isJokerTransformed ? 'linear-gradient(135deg, #fae8ff, #e9d5ff)' :
                         'linear-gradient(135deg, #fef3c7, #fde047)'
           }
         },
           letter==='*' ? '⭐' : letter,
-          !isUsed && letter!=='*' && h('span', {className:'letter-points'}, POINTS[letter]||0)
+          isJokerTransformed && h('span', {style:{position:'absolute',top:'2px',right:'2px',fontSize:'14px'}}, '★'),
+          !isUsed && letter!=='*' && !isJokerTransformed && h('span', {className:'letter-points'}, POINTS[letter]||0)
         );
       })
     ),
     
     h('div', {className:'control-panel'},
       h('button', {onClick:handlePlay, disabled:checking||temp.length===0||wordPreview.invalid.length>0, className:'btn btn-play'}, checking ? 'Kontrol...' : temp.length>0 ? '▶️ OYNA' : 'Harf Yerleştir'),
-      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'5px'}},
-        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, 'İptal'),
+      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:'5px'}},
+        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, 'Geri Al'),
         swapMode ?
           h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiş ('+selectedSwap.length+')') :
           h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiştir'),
-        h('button', {onClick:handlePass, className:'btn btn-secondary'}, 'Pas'),
         h('button', {onClick:handleForfeit, className:'btn btn-danger'}, 'Pes Et')
       )
     ),
@@ -1033,6 +1096,7 @@ function Game() {
                 nh[jokerIdx] = letter;
                 if(turn===1) setP1Hand(nh);
                 else setP2Hand(nh);
+                setJokerUsedIndices([...jokerUsedIndices, jokerIdx]);
                 setShowJokerModal(false);
                 setJokerIdx(null);
                 setSelectedLetter({letter,idx:jokerIdx,isJoker:true});
