@@ -38,17 +38,17 @@
             flex-direction: column;
         }
         
-        /* COMPACT SCORE BAR WITH WORD PREVIEW */
+        /* COMPACT SCORE BAR - NO BAG INFO */
         .score-bar {
             display: flex;
-            gap: 3px;
+            gap: 4px;
             padding: 6px 8px;
             background: transparent;
         }
         
         .score-item {
             flex: 0 0 auto;
-            min-width: 80px;
+            min-width: 85px;
             padding: 6px 8px;
             border-radius: 10px;
             display: flex;
@@ -116,7 +116,7 @@
             margin-top: 1px;
         }
         
-        /* WORD PREVIEW BAR - CENTER */
+        /* WORD PREVIEW BAR - EXPANDED */
         .word-preview-bar {
             flex: 1;
             padding: 6px 12px;
@@ -150,21 +150,11 @@
             color: #2563eb;
         }
         
-        .bag-info {
-            flex: 0 0 auto;
-            min-width: 50px;
-            padding: 6px 8px;
-            border-radius: 10px;
-            background: rgba(255,255,255,0.3);
-            backdrop-filter: blur(10px);
-            font-size: 10px;
-            font-weight: 900;
-            color: white;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 3px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        .bag-count {
+            font-size: 9px;
+            font-weight: 700;
+            color: #6b7280;
+            margin-top: 2px;
         }
         
         .board-container {
@@ -172,23 +162,24 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 6px 8px;
+            padding: 8px;
             position: relative;
             overflow: hidden;
         }
         
+        /* MINIMAL GAP BOARD */
         .board-grid {
             display: grid;
-            gap: 2px;
-            background: #d1d5db;
-            padding: 5px;
-            border-radius: 12px;
-            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+            gap: 0px;
+            background: #9ca3af;
+            padding: 1px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
         }
         
         .board-cell {
             aspect-ratio: 1;
-            border: 2.5px solid #9ca3af;
+            border: 1px solid #9ca3af;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -196,13 +187,10 @@
             user-select: none;
             touch-action: manipulation;
             transition: all 0.15s;
-            border-radius: 4px;
+            border-radius: 0px;
             background: #f7f7f5;
             font-size: clamp(9px, 2.5vw, 13px);
             cursor: pointer;
-            box-shadow: 
-                inset 0 0 0 1px rgba(156, 163, 175, 0.2),
-                0 1px 2px rgba(0,0,0,0.05);
         }
         
         .board-cell:active {
@@ -211,7 +199,7 @@
         
         .board-cell.drag-over {
             background: #e0e7ff !important;
-            border: 3px solid #6366f1 !important;
+            border: 2px solid #6366f1 !important;
             transform: scale(1.05);
         }
         
@@ -234,7 +222,7 @@
             color: white;
             border-color: #d97706;
             font-weight: 900;
-            box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
+            box-shadow: 0 0 8px rgba(251, 191, 36, 0.4);
         }
         
         .hand-container {
@@ -894,13 +882,13 @@ function Game() {
   const tempScore = calcScore(temp);
   
   const maxWidth = window.innerWidth - 16;
-  const maxHeight = window.innerHeight - 240;
+  const maxHeight = window.innerHeight - 230;
   const cellSize = Math.min(maxWidth / COLS, maxHeight / ROWS);
   const boardWidth = cellSize * COLS;
   const boardHeight = cellSize * ROWS;
   
   return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh'}},
-    // COMPACT SCORE BAR WITH WORD PREVIEW
+    // COMPACT SCORE BAR - NO BAG INFO
     h('div', {className:'score-bar'},
       h('div', {className:'score-item p1' + (turn===1?' active':'')},
         h('div', {className:'score-top'},
@@ -911,15 +899,14 @@ function Game() {
         turn===1 && h('div', {className:'turn-indicator'}, 'SIRA!')
       ),
       
-      // WORD PREVIEW BAR
+      // EXPANDED WORD PREVIEW BAR
       h('div', {className:'word-preview-bar'},
         wordPreview.valid.length>0 && h('div', {className:'word-valid'}, '✅ ' + wordPreview.valid.join(', ')),
         wordPreview.invalid.length>0 && h('div', {className:'word-invalid'}, '❌ ' + wordPreview.invalid.join(', ')),
         temp.length>0 && h('div', {className:'word-score'}, '+' + tempScore + ' puan'),
+        h('div', {className:'bag-count'}, '🎒 ' + bag.length + ' harf'),
         !temp.length && !wordPreview.valid.length && !wordPreview.invalid.length && h('div', {style:{fontSize:'10px',color:'#9ca3af',fontWeight:'700'}}, 'Harf yerleştir')
       ),
-      
-      h('div', {className:'bag-info'}, '🎒 ' + bag.length),
       
       h('div', {className:'score-item p2' + (turn===2?' active':'')},
         h('div', {className:'score-top'},
@@ -956,7 +943,6 @@ function Game() {
             else if(isCS && !dt) cc += ' center-star';
             if(isDragOver) cc += ' drag-over';
             
-            // Show player colors for placed tiles
             let cellStyle = {};
             if(dt) {
               cellStyle = {
