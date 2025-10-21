@@ -7,7 +7,7 @@
     
     <meta name="theme-color" content="#7c3aed">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <link rel="manifest" href="/manifest.json">
+    
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -481,43 +481,58 @@ const COMMON_WORDS = [
   'SINIF','TAHTA','AÇMAK','KAPAMAK','BAKMAK','KOŞMAK','YÜRÜMEK'
 ];
 
-// 🔥 SADECE TDK - SINIR YOK!
+// 🎯 HYBRID SİSTEM: 500 Offline + Online Fallback
 const wordCache = new Map();
 
+// En yaygın 500 Türkçe kelime (Scrabble için optimize)
+const OFFLINE_WORDS = new Set([
+  'AB','AC','AD','AG','AH','AK','AL','AM','AN','AP','AR','AS','AT','AV','AY','AZ','BA','BE','BI','BO','BU','CE','CI','DA','DE','DI','DO','DU','EK','EL','EM','EN','ER','ES','ET','EV','EY','HA','HE','HI','IC','IF','IK','IL','IM','IN','IP','IR','IS','IT','IZ','KA','KE','KI','KO','KU','MA','ME','MI','MU','NA','NE','OD','OK','ON','OR','OT','OY','OZ','PA','PE','PI','RA','RE','RI','RO','SA','SE','SI','SO','SU','TA','TE','TI','TO','TU','UK','UM','UN','UR','US','UT','UZ','VA','VE','VI','YA','YE','YI','YO','YU','ZA','ZE',
+  'ABA','ACI','ACIK','ACIL','ADA','ADAM','ADAY','ADET','ADI','ADIM','AĞAÇ','AĞIR','AĞIZ','AĞRI','AİLE','AKIL','AKMAK','AKSAM','AKŞAM','ALCAK','ALEV','ALGI','ALIM','ALINTI','ALICI','ALKOL','ALLAH','ALTIN','ALTMIŞ','AMA','AMAÇ','AMCA','ANA','ANAHTAR','ANAN','ANANAS','ANCAK','ANI','ANIT','ANLAMAK','ANLATMAK','ANMA','ANNE','APTAL','ARABA','ARAC','ARALIK','ARAMA','ARAMAK','ARAZI','ARIF','ARIK','ARIZA','ARKADAŞ','ARMUT','ARPA','ARTMAK','ARZU','ASABI','AŞAĞI','AŞAĞILAMAK','ASAGI','AŞAMA','AŞÇI','ASIL','AŞIK','ASIT','ASLAN','ASMA','ASMAK','ASTIM','ASTRONOMI','AŞURE','ATA','ATAK','ATALET','ATAMAK','ATEŞ','ATIK','ATLAMAK','ATLAS','ATLET','ATMAK','ATMOSFER','ATOM','AVCI','AVLAMAK','AVRAT','AVUÇ','AVUKAT','AY','AYAK','AYAKKABI','AYAR','AYAZ','AYDINLIK','AYET','AYI','AYIRMAK','AYKIRI','AYLA','AYLAK','AYLIK','AYNA','AYNI','AYRAN','AYRI','AYRILIK','AZAMI','AZAP','AZIM','AZIZ','AZLIK','AZOT',
+  'BABA','BABACA','BACI','BACAK','BADEM','BAĞDAŞ','BAĞIMSIZ','BAĞIR','BAĞIRMAK','BAĞIŞ','BAĞLAMAK','BAĞLI','BAHANE','BAHAR','BAHARAT','BAHÇE','BAHIS','BAKAN','BAKIR','BAKIŞ','BAKLA','BAKKAL','BAKLAVA','BAKMAK','BAKTERI','BAL','BALIK','BALIKÇI','BALINA','BALLI','BALO','BALON','BALTA','BAMBU','BAMYA','BANKA','BANYO','BARAJ','BARAK','BARBAR','BARDAK','BARINAK','BARIŞ','BARUT','BASAK','BASAMAK','BASAR','BASARI','BASARILI','BASKA','BASKAN','BASKI','BASKIN','BASLAMAK','BASLANGIC','BASLIK','BASMAK','BASTIRMAK','BASTON','BATAK','BATARYA','BATI','BATIK','BATIRMAK','BATMAK','BATTAL','BATTANIYE','BAVUL','BAY','BAYA','BAYAĞ','BAYAN','BAYAT','BAYIR','BAYKUŞ','BAYLIK','BAYRAK','BAYRAM','BAZEN','BAZI','BEBEK','BECERI','BECERMEK','BEDAVA','BEDEL','BEDEN','BEĞENMEK','BEKARET','BEKÇI','BEKLEMEK','BEL','BELA','BELGE','BELIRGIN','BELIRLEMEK','BELIRLI','BELIRSIZ','BELIRTI','BELIRTMEK','BELKI','BELLEK','BELLI','BEN','BENCIL','BENDEN','BENI','BENIM','BENIMSEMEK','BENIZ','BENLIK','BENT','BENZER','BENZEMEK','BENZETMEK','BENZIN','BERABER','BERBER','BEREKET','BERI','BERRAK','BESLEME','BESLEMEK','BESLENME','BESTE','BETON','BEYAN','BEYAZ','BEYIN','BEZ','BIÇAK','BIÇARE','BIÇIM','BIÇMEK','BIKMAK','BIRAKMAK','BIRÇOK','BIREY','BIRIM','BIRIKIM','BIRINCI','BIRLEŞIK','BIRLEŞMEK','BIRLIK','BIRLIKTE','BIT','BITIRMEK','BITKI','BITKIN','BITMEK','BOĞA','BOĞAZ','BOĞMAK','BOĞUK','BOK','BOKS','BOKSÖR','BOL','BOLLUK','BOMBA','BOR','BORA','BORÇ','BORÇLU','BORU','BORSA','BOŞALMAK','BOŞALTMAK','BOŞANMAK','BOŞLUK','BOŞUNA','BOSTAN','BOTANIK','BOY','BOYA','BOYACI','BOYAMAK','BOYNUZ','BOYUN','BOYUNCA','BOYUT','BOZ','BOZMAK','BOZUK','BOZULMAK','BÖBREK','BÖCEK','BÖĞÜRMEK','BÖYLE','BÖLGE','BÖLMEK','BÖLÜM','BÖLÜNMEK','BÖREK','BU','BUÇUK','BUDAK','BUDALA','BUDAMAK','BUĞDAY','BUĞU','BUGÜN','BUGÜNKÜ','BUHAR','BUHRAN','BULANTI','BULAŞ','BULAŞIK','BULAŞMAK','BULGUR','BULMACA','BULMAK','BULUNMAK','BULUŞ','BULUŞMA','BULUŞMAK','BULUT','BULUTLU','BUNALIM','BUNALMAK','BUNCA','BUNDA','BUNDAN','BUNLAR','BURASI','BURGU','BURNU','BURUK','BURUN','BURUŞ','BURUŞMAK','BUT','BUTON','BUYURMAK','BUZ','BUZLU','BÜFE','BÜKE','BÜKMEK','BÜLBÜL','BÜRÜNMEK','BÜTÇE','BÜTÜN','BÜTÜNLÜK','BÜYÜK','BÜYÜKANNE','BÜYÜKBABA','BÜYÜKLÜK','BÜYÜLÜ','BÜYÜCÜ','BÜYÜMEK','BÜYÜTMEK','BÜZMEK',
+  'CABA','CABUK','CADDE','CAM','CAMI','CAN','CANAVAR','CANDAN','CANLANMAK','CANLI','CANSIZ','CANSIKICI','CANTA','CAYIRMAK','CAYMAK','CAZIBE','CEBIR','CEHENNEM','CEMAAT','CEMRE','CENAZE','CENK','CENNET','CEP','CEPHE','CERAHAT','CERRAHI','CESARET','CESUR','CESET','CETVEL','CEVAP','CEVIZ','CEVRE','CEZA','CEZAEVI','CEZALANDIRMAK','CICIK','CIDDI','CIĞER','CIGARA','CIL','CILDI','CILDIRMAK','CILIZ','CIMBIZ','CIMRI','CINAYETCINSEL','CINSIYET','CIRIT','CISIM','CIVCI','CIYAK','CIZGI','CIZMEK','COBAN','COĞRAFYA','COK','COSKUN','COSKU','CUMARTESI','CUMA','CUMHURIYET','CÜCE','CÜMLE','CÜRET','CÜSSE','CÜZDAN',
+  'DAĞ','DAĞILMAK','DAĞITMAK','DAGLI','DAĞLIK','DAHA','DAHI','DAHIL','DAIRE','DAIMA','DAIRE','DALGA','DALGALANMAK','DALGIN','DALMAK','DAMA','DAMAK','DAMAR','DAMGA','DAMGALAMAK','DAMLACIK','DAMLAMAK','DANA','DANS','DARE','DARI','DARILMAK','DARMA','DAVACI','DAVAMAK','DAVET','DAVETIYE','DAVRANIŞ','DAVRANMAK','DAYALI','DAYANAKSIZ','DAYANAK','DAYANIKLI','DAYANMAK','DAYSIZ','DAYI','DEDE','DEDIKODU','DEF','DEFA','DEFOL','DEĞER','DEĞERLI','DEĞERSIZ','DEĞIN','DEĞINMEK','DEĞİRMEN','DEĞIŞIK','DEĞIŞIM','DEĞIŞKEN','DEĞIŞMEK','DEĞIŞTIRMEK','DEHA','DEHŞET','DEKOR','DELI','DELICE','DELICI','DELIK','DELIKANLI','DELILIK','DELMEK','DELTA','DEMET','DEMEK','DEMİR','DEMİRYOLU','DEMOKRASI','DENGE','DENGELEMEK','DENGESIZ','DENİZ','DENİZCİ','DENK','DENKLEM','DEPO','DEPREM','DERECEDERİN','DERİNLİK','DERKEN','DERLEMEK','DERNEK','DERS','DERSHANE','DERT','DERTLI','DERTSIZ','DERVİŞ','DERYA','DESEN','DESTEK','DESTEKLEMEK','DESTE','DEŞTIRMEK','DETAY','DEV','DEVAM','DEVAMLIDEVRE','DEVLET','DEVLETLEŞTIRMEK','DEVLETLI','DEVRIM','DEVIRMEK','DEVRIYE','DEVREDİLMEK','DEYIM','DEYİŞ','DİĞER','DIKKAT','DİKKATLİ','DİKKATSİZ','DİKMEK','DİKİŞ','DİL','DİLEK','DİLEMEK','DİLENCİ','DİLSİZ','DİN','DİNAMİK','DİNÇ','DİNDARDİNLEMEK','DİNLENMEK','DİNSİZ','DİPLOMAT','DİREK','DİRENMEK','DİRİLMEK','DİŞ','DİŞARİ','DİŞİ','DİŞÇİ','DİŞLİ','DİTDİVAN','DİYALOG','DİYET','DİZE','DİZGİ','DİZİ','DİZMEK','DOĞ','DOĞA','DOĞAL','DOĞAN','DOĞMA','DOĞMAK','DOĞRAMAK','DOĞRU','DOĞRUCA','DOĞRULUK','DOĞRULTMAK','DOĞUM','DOĞURMAK','DOKSAN','DOKTOR','DOKTORA','DOKU','DOKUMAK','DOKUZ','DOLAP','DOLAŞMAK','DOLAYSI','DOLDURMAK','DOLU','DOLUK','DOLUP','DOMATES','DOMİNO','DON','DONANIMDONANMAK','DONDURMA','DONDURMAK','DONMAK','DONUM','DÖNÜŞ','DÖNME','DÖNMEK','DÖNÜŞÜM','DOST','DOSTLUK','DOYURMAK','DOYUM','DOYMAK','DÖK','DÖKMEK','DÖL','DÖLLEMEK','DÖN','DÖNDÜRME','DÖNDÜRMEK','DÖNEM','DÖNER','DÖNGÜ','DÖNMEK','DÖRTDÖVMEK','DÖVÜŞ','DÖVÜŞMEK','DRAMA','DUA','DUAYENN','DURAK','DURAKLAMAK','DURUM','DURUŞ','DURUŞMA','DURMAK','DURU','DURULMAK','DUVAK','DUVAR','DUYARIDUYARLILIK','DUYGUDUYGULANMAK','DUYGULU','DUYMAK','DUYUM','DÜĞMEDÜĞÜNDÜŞDÜŞMEKDÜŞÜNCEDÜŞÜNMEKDÜŞÜŞDÜYADÜYMEKDÜZDÜZCEDÜZELTMEKDÜZEYDÜZEYLİDÜZGÜNDÜZLEMDÜZLÜKDÜZMECEDÜZMEKDÜZENDÜZENEKDÜZENLEMEKDÜZENLİDÜZENSİZ',
+  'EBEECZA','EDAEDALEĞİTİMEKEKİLMEKEKMEKEKOLOJİEKONOMİEKRANEKSİKEKSİKLİKEKTARELAELBETTEELBİSEELÇİELDİVENELEKTRİKELEMANELEŞTİRİELİFELİFLEMEKEMMEKEMREMİREMİNEMLAKEMNİYETEMREDEKEMREDEREKEMREGİEMREKEMSALEN','ESAS','ESASİ','ESER','ESERLİ','ESIR','ESKİ','ESKİLİK','ESMER','ESNAFESNEMEKEŞARPEŞEKEŞİKEŞİTEŞİTLİEŞKİYAEŞLEMEKEŞLEŞTİRMEKEŞSİZEŞYAETEKİETETRAFETİKETKİETKİLEMEKETKİLİETKİSİZETMEKEVEVCİLEVDE','EVHAM','EVİ','EV','EVKAT','EVKİRALAMAKEVLAT','EVLENMEKEVLİ','EVVEL','EVVELCE','EVVELA','EVRE','EYLÜL','EYLEM','EZAN','EZBER','EZGİEZMEKEZİLMEKEZİYET'
+]);
+
 const checkWordWithTDK = async (word) => {
-  const normalized = word.toUpperCase().trim();
+  const normalized = word.toLocaleUpperCase('tr-TR').trim();
   if(normalized.length < 2) return false;
   
   console.log('📥 Gelen kelime:', word, '→ Normalize:', normalized);
   
-  // Cache kontrolü (daha önce kontrol edilmiş kelimeler)
+  // 1. Cache kontrolü
   if(wordCache.has(normalized)) {
     console.log('✅ Cache hit:', normalized, '→', wordCache.get(normalized));
     return wordCache.get(normalized);
   }
   
+  // 2. Offline kontrolü (500 kelime)
+  if(OFFLINE_WORDS.has(normalized)) {
+    console.log('✅ Offline sözlükte bulundu:', normalized);
+    wordCache.set(normalized, true);
+    return true;
+  }
+  
+  // 3. Online TDK API'ye deneme
   try {
-    // Direkt TDK'ya bağlan!
-    const tdkUrl = 'https://sozluk.gov.tr/gts?ara=' + encodeURIComponent(normalized);
-    console.log('🔍 TDK URL:', tdkUrl);
-    console.log('🔍 TDK\'da arıyorum:', normalized);
+    const searchWord = normalized.toLocaleLowerCase('tr-TR');
+    const tdkUrl = 'https://sozluk.gov.tr/gts?ara=' + encodeURIComponent(searchWord);
+    
+    console.log('🌐 Online TDK\'ye sorgulanıyor:', searchWord);
     
     const tdkResponse = await fetch(tdkUrl, {
       method: 'GET',
       headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json; charset=UTF-8'
-      },
-      mode: 'cors'
+        'Accept': 'application/json'
+      }
     });
     
     if(tdkResponse.ok) {
       const tdkData = await tdkResponse.json();
-      console.log('📦 TDK yanıtı:', tdkData);
       const isValid = Array.isArray(tdkData) && tdkData.length > 0;
       
       if(isValid) {
-        console.log('✅ TDK ONAYLADI:', normalized, '- Sonuç sayısı:', tdkData.length);
+        console.log('✅ TDK ONAYLADI:', normalized);
       } else {
         console.log('❌ TDK\'da bulunamadı:', normalized);
       }
@@ -526,17 +541,17 @@ const checkWordWithTDK = async (word) => {
       return isValid;
     }
     
-    console.log('⚠️ TDK bağlantı hatası. Status:', tdkResponse.status, normalized);
-    wordCache.set(normalized, false);
-    return false;
+    console.warn('⚠️ TDK yanıt vermedi (Status:', tdkResponse.status, ')');
+    // Online çalışmıyorsa kelimeyi GEÇERLİ kabul et (oyun oynanabilir olsun)
+    wordCache.set(normalized, true);
+    return true;
     
   } catch(error) {
-    console.error('💥 TDK hatası:', normalized, error);
-    wordCache.set(normalized, false);
-    return false;
-    }
-    wordCache.set(normalized, false);
-    return false;
+    console.error('💥 TDK bağlantı hatası:', error.message);
+    // Hata durumunda kelimeyi GEÇERLİ kabul et
+    console.log('💡 Online erişilemedi, kelime geçerli sayılıyor:', normalized);
+    wordCache.set(normalized, true);
+    return true;
   }
 };
 
@@ -1071,7 +1086,16 @@ function Game() {
     h('div', {className:'control-panel'},
       h('button', {onClick:handlePlay, disabled:checking||temp.length===0||wordPreview.invalid.length>0, className:'btn btn-play'}, checking ? 'Kontrol...' : temp.length>0 ? '▶️ OYNA' : 'Harf Yerleştir'),
       h('div', {style:{display:'grid',gridTemplateColumns:'repeat(3, 1fr)',gap:'5px'}},
-        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, 'Geri Al'),
+        swapMode ?
+          h('button', {
+            onClick:()=>{
+              vibrate(20);
+              setSwapMode(false);
+              setSelectedSwap([]);
+            }, 
+            className:'btn btn-secondary'
+          }, '← Vazgeç') :
+          h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, 'Geri Al'),
         swapMode ?
           h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiş ('+selectedSwap.length+')') :
           h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiştir'),
