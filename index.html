@@ -488,6 +488,8 @@ const checkWordWithTDK = async (word) => {
   const normalized = word.toUpperCase().trim();
   if(normalized.length < 2) return false;
   
+  console.log('📥 Gelen kelime:', word, '→ Normalize:', normalized);
+  
   // Cache kontrolü (daha önce kontrol edilmiş kelimeler)
   if(wordCache.has(normalized)) {
     console.log('✅ Cache hit:', normalized, '→', wordCache.get(normalized));
@@ -496,23 +498,26 @@ const checkWordWithTDK = async (word) => {
   
   try {
     // Direkt TDK'ya bağlan!
-    console.log('🔍 TDK\'da arıyorum:', normalized);
     const tdkUrl = 'https://sozluk.gov.tr/gts?ara=' + encodeURIComponent(normalized);
+    console.log('🔍 TDK URL:', tdkUrl);
+    console.log('🔍 TDK\'da arıyorum:', normalized);
     
     const tdkResponse = await fetch(tdkUrl, {
       method: 'GET',
       headers: {
         'Accept': 'application/json',
+        'Content-Type': 'application/json; charset=UTF-8'
       },
       mode: 'cors'
     });
     
     if(tdkResponse.ok) {
       const tdkData = await tdkResponse.json();
+      console.log('📦 TDK yanıtı:', tdkData);
       const isValid = Array.isArray(tdkData) && tdkData.length > 0;
       
       if(isValid) {
-        console.log('✅ TDK ONAYLADI:', normalized);
+        console.log('✅ TDK ONAYLADI:', normalized, '- Sonuç sayısı:', tdkData.length);
       } else {
         console.log('❌ TDK\'da bulunamadı:', normalized);
       }
@@ -521,7 +526,7 @@ const checkWordWithTDK = async (word) => {
       return isValid;
     }
     
-    console.log('⚠️ TDK bağlantı hatası:', normalized);
+    console.log('⚠️ TDK bağlantı hatası. Status:', tdkResponse.status, normalized);
     wordCache.set(normalized, false);
     return false;
     
