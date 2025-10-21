@@ -48,12 +48,14 @@
         
         .score-item {
             flex: 0 0 auto;
-            min-width: 85px;
-            padding: 6px 8px;
+            min-width: 115px;
+            padding: 6px 12px;
             border-radius: 10px;
             display: flex;
-            flex-direction: column;
-            gap: 1px;
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
             font-weight: 900;
             color: white;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
@@ -79,6 +81,11 @@
             animation: glow-pulse 2s ease-in-out infinite;
         }
         
+        .score-item.inactive {
+            filter: grayscale(100%) brightness(0.6);
+            opacity: 0.7;
+        }
+        
         @keyframes glow-pulse {
             0%, 100% { 
                 box-shadow: 
@@ -94,32 +101,25 @@
             }
         }
         
-        .score-top {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+        .player-name {
+            font-size: 12px;
+            font-weight: 900;
+        }
+        
+        .player-score {
+            font-size: 18px;
+            font-weight: 900;
+        }
+        
+        .player-territory {
             font-size: 11px;
-        }
-        
-        .score-bottom {
-            font-size: 16px;
             font-weight: 900;
-        }
-        
-        .turn-indicator {
-            font-size: 8px;
-            font-weight: 900;
-            background: rgba(255,255,255,0.3);
-            padding: 1px 4px;
-            border-radius: 4px;
-            text-align: center;
-            margin-top: 1px;
         }
         
         /* WORD PREVIEW BAR - EXPANDED */
         .word-preview-bar {
             flex: 1;
-            padding: 6px 12px;
+            padding: 4px 12px;
             border-radius: 10px;
             background: rgba(255,255,255,0.95);
             backdrop-filter: blur(10px);
@@ -127,9 +127,9 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 2px;
+            gap: 1px;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            min-height: 52px;
+            min-height: 44px;
         }
         
         .word-valid {
@@ -890,13 +890,10 @@ function Game() {
   return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh'}},
     // COMPACT SCORE BAR - NO BAG INFO
     h('div', {className:'score-bar'},
-      h('div', {className:'score-item p1' + (turn===1?' active':'')},
-        h('div', {className:'score-top'},
-          h('span', null, 'P1'),
-          h('span', null, territory.p1 + '%')
-        ),
-        h('div', {className:'score-bottom'}, p1Score),
-        turn===1 && h('div', {className:'turn-indicator'}, 'SIRA!')
+      h('div', {className:'score-item p1' + (turn===1?' active':' inactive')},
+        h('span', {className:'player-name'}, 'P1'),
+        h('span', {className:'player-score'}, p1Score),
+        h('span', {className:'player-territory'}, territory.p1 + '%')
       ),
       
       // EXPANDED WORD PREVIEW BAR
@@ -908,13 +905,10 @@ function Game() {
         !temp.length && !wordPreview.valid.length && !wordPreview.invalid.length && h('div', {style:{fontSize:'10px',color:'#9ca3af',fontWeight:'700'}}, 'Harf yerleştir')
       ),
       
-      h('div', {className:'score-item p2' + (turn===2?' active':'')},
-        h('div', {className:'score-top'},
-          h('span', null, 'P2'),
-          h('span', null, territory.p2 + '%')
-        ),
-        h('div', {className:'score-bottom'}, p2Score),
-        turn===2 && h('div', {className:'turn-indicator'}, 'SIRA!')
+      h('div', {className:'score-item p2' + (turn===2?' active':' inactive')},
+        h('span', {className:'player-name'}, 'P2'),
+        h('span', {className:'player-score'}, p2Score),
+        h('span', {className:'player-territory'}, territory.p2 + '%')
       )
     ),
     
