@@ -38,7 +38,7 @@
             flex-direction: column;
         }
         
-        /* Score Bar - With Territory % */
+        /* Score Bar - ACTIVE PLAYER PROMINENT */
         .score-bar {
             display: flex;
             gap: 4px;
@@ -56,7 +56,8 @@
             font-weight: 900;
             color: white;
             box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-            transition: all 0.2s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 2px solid transparent;
         }
         
         .score-item.p1 {
@@ -68,8 +69,28 @@
         }
         
         .score-item.active {
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.6), 0 4px 16px rgba(0,0,0,0.3);
-            transform: scale(1.02);
+            border: 4px solid white;
+            box-shadow: 
+                0 0 20px rgba(255,255,255,0.8),
+                0 0 40px rgba(255,255,255,0.5),
+                0 6px 20px rgba(0,0,0,0.3);
+            transform: scale(1.08);
+            animation: glow-pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes glow-pulse {
+            0%, 100% { 
+                box-shadow: 
+                    0 0 20px rgba(255,255,255,0.8),
+                    0 0 40px rgba(255,255,255,0.5),
+                    0 6px 20px rgba(0,0,0,0.3);
+            }
+            50% { 
+                box-shadow: 
+                    0 0 30px rgba(255,255,255,1),
+                    0 0 60px rgba(255,255,255,0.7),
+                    0 8px 24px rgba(0,0,0,0.4);
+            }
         }
         
         .score-top {
@@ -82,6 +103,16 @@
         .score-bottom {
             font-size: 18px;
             font-weight: 900;
+        }
+        
+        .turn-indicator {
+            font-size: 9px;
+            font-weight: 900;
+            background: rgba(255,255,255,0.3);
+            padding: 2px 6px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 2px;
         }
         
         .bag-info {
@@ -189,7 +220,7 @@
             100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
         }
         
-        /* Hand Container - NO OVERFLOW */
+        /* Hand Container */
         .hand-container {
             display: flex;
             gap: 5px;
@@ -256,9 +287,9 @@
             border-radius: 3px;
         }
         
-        /* Control Buttons - WITH TEXT */
+        /* Control Buttons */
         .control-panel {
-            padding: 6px 8px;
+            padding: 6px 8px 8px 8px;
             background: white;
             display: flex;
             flex-direction: column;
@@ -286,10 +317,16 @@
             box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         
-        .btn-primary {
+        .btn-play {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
-            font-size: 14px;
+            font-size: 16px;
+            padding: 14px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-play:active:not(:disabled) {
+            box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
         }
         
         .btn-secondary {
@@ -307,7 +344,7 @@
             cursor: not-allowed;
         }
         
-        /* Message Toast */
+        /* Toast */
         .toast {
             position: fixed;
             top: 50%;
@@ -401,31 +438,90 @@ const POINTS = {
 
 const LETTERS = ['A','B','C','Ç','D','E','F','G','Ğ','H','I','İ','J','K','L','M','N','O','Ö','P','R','S','Ş','T','U','Ü','V','Y','Z'];
 
+// Extended common words
 const COMMON_WORDS = [
   'MASA','KAPI','EV','AĞAÇ','ARABA','KITAP','KALEM','DEFTER','OKUL','ÖĞRENCİ',
   'ÖĞRETMEN','ANNE','BABA','KARDEŞ','ARKADAŞ','OYUN','TOP','BAL','SU','YER',
-  'GÖK','GÜNEŞ','AY','YILDIZ','DENIZ','DAĞ','ORMAN','ÇİÇEK','BAHÇE','PARK',
+  'GÖK','GÖKYÜZÜ','GÜNEŞ','AY','YILDIZ','DENIZ','DAĞ','ORMAN','ÇİÇEK','BAHÇE','PARK',
   'HAYVAN','KEDİ','KÖPEK','KUŞ','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ',
-  'ELBİSE','AYAKKABI','ŞAPKA','PANTOLON','GÖMLEK','CEKET','İÇ','DIŞ','ÜST','ALT'
+  'ELBİSE','AYAKKABI','ŞAPKA','PANTOLON','GÖMLEK','CEKET','ETEK','İÇ','DIŞ','ÜST',
+  'ALT','SAĞ','SOL','ÖN','ARKA','BÜYÜK','KÜÇÜK','UZUN','KISA','YENİ','ESKİ',
+  'GÜZEL','ÇİRKİN','İYİ','KÖTÜ','SICAK','SOĞUK','AÇIK','KAPALI','KOLAY','ZOR',
+  'HIZLI','YAVAŞ','GENİŞ','DAR','TOK','AÇ','TATLI','TUZLU','EKŞİ','ACI','SERT',
+  'YUMUŞAK','KURU','ISLAK','TEMİZ','KİRLİ','DOLU','BOŞ','AĞIR','HAFİF','YAKIN',
+  'UZAK','YENİDEN','ESKİDEN','ŞİMDİ','SONRA','ÖNCE','HER','HİÇ','BİR','İKİ',
+  'ÜÇ','DÖRT','BEŞ','ALTI','YEDİ','SEKİZ','DOKUZ','ON','YÜZ','BİN','MİLYON',
+  'BUGÜN','DÜN','YARIN','GÜN','SAAT','DAKİKA','SANİYE','HAFTA','AY','YIL',
+  'İLKBAHAR','YAZ','SONBAHAR','KIŞ','SABAH','ÖĞLE','AKŞAM','GECE','YEMEK',
+  'İÇMEK','UYUMAK','GİTMEK','GELMEK','ALMAK','VERMEK','YAPMAK','GÖRMEK','SEVMEK',
+  'ADAM','KADIN','ÇOCUK','BEBEK','GENÇ','YAŞLI','İNSAN','KİŞİ','ARKADAŞ',
+  'AL','VER','GEL','GİT','BAK','YAP','YE','İÇ','OKU','YAZ','OYNA','KOŞ',
+  'AYAK','BACAK','KOL','EL','PARMAK','BAŞ','GÖZ','KULAK','BURUN','AĞIZ',
+  'SAÇ','DİŞ','DİL','BOYUN','OMUZ','GÖĞÜS','KARIN','BEL','SIRT',
+  'EKMEK','SÜT','PEYNIR','YUMURTA','ET','TAVUK','BALIK','SEBZE','MEYVE',
+  'ELMA','ARMUT','PORTAKAL','MUZ','ÜZüM','KIRAZ','ÇİLEK','KAVUN','KARPUZ',
+  'DOMATES','SALATALIK','BIBER','PATATES','SOĞAN','SARIMSAK','HAVUÇ','LAHANA',
+  'OKUMAK','YAZMAK','ÇALIŞMAK','OYNAMAK','KOŞMAK','YÜRÜMEK','DURMAK','OTURMAK',
+  'KIZ','OĞLAN','ERKEK','KOCA','KARI','EŞ','KAYINVALIDE','DAMAT','GELIN',
+  'AYAKKABISI','GÖMLEGI','ETEK','CEKET','PALTO','MANTO','KAZAK','MONT',
+  'BEYAZ','SİYAH','KIRMIZI','MAVI','YEŞİL','SARI','TURUNCU','MOR','PEMBE','GRİ','KAHVE',
+  'YATAK','YASTIK','YORGAN','BATTANIYE','ÇARŞAF','MASA','SANDALYE','KOLTUK',
+  'TELEVIZYON','TELEFON','BİLGİSAYAR','KLAVYE','FARE','EKRAN','HOPARLÖR',
+  'ARABA','OTOBÜS','TREN','UÇAK','GEMİ','BİSİKLET','MOTOR','KAMYON',
+  'YUMURTA','MAKARNA','PİRİNÇ','MERCIMEK','FASULYE','NOHUT','BULGUR',
+  'ÇOCUK','KALEM','KITAP','DEFTER','OKUL','SINIF','ÖĞRETMEN','ÖĞRENCİ','TAHTA',
+  'AÇMAK','KAPAMAK','AÇMAK','BAKMAK','GİTMEK','GELMEK','KOŞMAK','YÜRÜMEK',
+  'ÜÇ','DÖRT','BEŞ','ALTI','YEDİ','SEKİZ','DOKUZ','ON'
 ];
 
 const wordCache = new Map();
 COMMON_WORDS.forEach(w => wordCache.set(w, true));
 
+// IMPROVED TDK CHECK - Direct API
 const checkWordWithTDK = async (word) => {
-  const n = word.toUpperCase().trim();
-  if(n.length < 2) return false;
-  if(wordCache.has(n)) return wordCache.get(n);
+  const normalized = word.toUpperCase().trim();
+  if(normalized.length < 2) return false;
+  
+  // Check cache first
+  if(wordCache.has(normalized)) {
+    console.log('✅ Cache hit:', normalized, '→', wordCache.get(normalized));
+    return wordCache.get(normalized);
+  }
   
   try {
-    const r = await fetch('https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word='+encodeURIComponent(n));
-    if(!r.ok) { wordCache.set(n,false); return false; }
-    const d = await r.json();
-    const v = d.valid === true;
-    wordCache.set(n,v);
-    return v;
-  } catch(e) {
-    wordCache.set(n,false);
+    // Try direct TDK API first
+    console.log('🔍 Checking TDK API:', normalized);
+    const tdkUrl = 'https://sozluk.gov.tr/gts?ara=' + encodeURIComponent(normalized);
+    const tdkResponse = await fetch(tdkUrl);
+    
+    if(tdkResponse.ok) {
+      const tdkData = await tdkResponse.json();
+      const isValid = Array.isArray(tdkData) && tdkData.length > 0;
+      console.log('📖 TDK result:', normalized, '→', isValid);
+      wordCache.set(normalized, isValid);
+      return isValid;
+    }
+    
+    // Fallback to Netlify function
+    console.log('🔄 Trying Netlify fallback:', normalized);
+    const fallbackUrl = 'https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word=' + encodeURIComponent(normalized);
+    const fallbackResponse = await fetch(fallbackUrl);
+    
+    if(fallbackResponse.ok) {
+      const fallbackData = await fallbackResponse.json();
+      const isValid = fallbackData.valid === true;
+      console.log('🌐 Netlify result:', normalized, '→', isValid);
+      wordCache.set(normalized, isValid);
+      return isValid;
+    }
+    
+    console.log('❌ Both APIs failed for:', normalized);
+    wordCache.set(normalized, false);
+    return false;
+    
+  } catch(error) {
+    console.error('💥 Error checking word:', normalized, error);
+    wordCache.set(normalized, false);
     return false;
   }
 };
@@ -477,16 +573,13 @@ function Game() {
   const p1Color = '#ef4444';
   const p2Color = '#eab308';
   
-  // Calculate territory control
   const getTerritoryControl = () => {
     let p1Count = 0;
     let p2Count = 0;
-    let totalOccupied = 0;
     
     for(let r=0; r<ROWS; r++) {
       for(let c=0; c<COLS; c++) {
         if(board[r][c]) {
-          totalOccupied++;
           if(board[r][c].color === p1Color) p1Count++;
           else if(board[r][c].color === p2Color) p2Count++;
         }
@@ -549,7 +642,12 @@ function Game() {
   const checkWords = async (tempTiles) => {
     if(tempTiles.length === 0) { setWordPreview({valid:[],invalid:[]}); return; }
     const words = findWords(tempTiles);
-    const results = await Promise.all(words.map(async (w) => ({word:w,valid:await checkWordWithTDK(w)})));
+    console.log('🔍 Checking words:', words);
+    const results = await Promise.all(words.map(async (w) => {
+      const valid = await checkWordWithTDK(w);
+      return {word:w, valid};
+    }));
+    console.log('📊 Results:', results);
     setWordPreview({
       valid: results.filter(r=>r.valid).map(r=>r.word),
       invalid: results.filter(r=>!r.valid).map(r=>r.word)
@@ -727,12 +825,6 @@ function Game() {
     setTimeout(()=>setMsg(''),2000);
   };
   
-  const handleShuffle = () => {
-    vibrate(20);
-    if(turn===1) setP1Hand([...p1Hand].sort(()=>Math.random()-0.5));
-    else setP2Hand([...p2Hand].sort(()=>Math.random()-0.5));
-  };
-  
   const handleSwap = () => {
     if(selectedSwap.length===0) return;
     if(bag.length < selectedSwap.length) {
@@ -798,14 +890,15 @@ function Game() {
   const boardHeight = cellSize * ROWS;
   
   return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh'}},
-    // Score Bar with Territory %
+    // Score Bar - PROMINENT ACTIVE PLAYER
     h('div', {className:'score-bar'},
       h('div', {className:'score-item p1' + (turn===1?' active':'')},
         h('div', {className:'score-top'},
           h('span', null, 'P1'),
           h('span', null, territory.p1 + '%')
         ),
-        h('div', {className:'score-bottom'}, p1Score)
+        h('div', {className:'score-bottom'}, p1Score),
+        turn===1 && h('div', {className:'turn-indicator'}, 'SIRA SİZDE!')
       ),
       h('div', {className:'bag-info'}, '🎒 ' + bag.length),
       h('div', {className:'score-item p2' + (turn===2?' active':'')},
@@ -813,7 +906,8 @@ function Game() {
           h('span', null, 'P2'),
           h('span', null, territory.p2 + '%')
         ),
-        h('div', {className:'score-bottom'}, p2Score)
+        h('div', {className:'score-bottom'}, p2Score),
+        turn===2 && h('div', {className:'turn-indicator'}, 'SIRA SİZDE!')
       )
     ),
     
@@ -861,7 +955,7 @@ function Game() {
       )
     ),
     
-    // Hand - FIXED WIDTH
+    // Hand
     h('div', {className:'hand-container'},
       ...currentHand.map((letter,idx) => {
         const isUsed = temp.some(t => t.idx===idx);
@@ -895,12 +989,11 @@ function Game() {
       })
     ),
     
-    // Controls - TEXT LABELS
+    // Controls - BIG PLAY BUTTON
     h('div', {className:'control-panel'},
-      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(5, 1fr)',gap:'5px'}},
-        temp.length>0 && h('button', {onClick:handlePlay, disabled:checking||wordPreview.invalid.length>0, className:'btn btn-primary', style:{gridColumn:'span 5'}}, checking ? 'Kontrol...' : 'Oyna'),
+      h('button', {onClick:handlePlay, disabled:checking||temp.length===0||wordPreview.invalid.length>0, className:'btn btn-play'}, checking ? 'Kontrol Ediliyor...' : temp.length>0 ? '▶️ OYNA (+'+tempScore+' puan)' : 'Harf Yerleştir'),
+      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'5px'}},
         h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, 'İptal'),
-        h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn btn-secondary'}, 'Karıştır'),
         swapMode ?
           h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiş ('+selectedSwap.length+')') :
           h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, 'Değiştir'),
@@ -918,10 +1011,10 @@ function Game() {
         h('div', {style:{fontSize:'80px',marginBottom:'20px'}}, '🏆'),
         h('h2', {style:{fontSize:'32px',fontWeight:'900',marginBottom:'20px',background:'linear-gradient(135deg, #667eea, #764ba2)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}, 'Oyuncu ' + winner + ' Kazandı!'),
         h('div', {style:{background:'linear-gradient(135deg, #f3f4f6, #e5e7eb)',padding:'20px',borderRadius:'16px',marginBottom:'24px'}},
-          h('p', {style:{fontSize:'20px',fontWeight:'900',marginBottom:'10px',color:'#ef4444'}}, 'P1: ' + p1Score + ' puan'),
-          h('p', {style:{fontSize:'20px',fontWeight:'900',color:'#eab308'}}, 'P2: ' + p2Score + ' puan')
+          h('p', {style:{fontSize:'20px',fontWeight:'900',marginBottom:'10px',color:'#ef4444'}}, 'P1: ' + p1Score + ' puan (' + territory.p1 + '%)'),
+          h('p', {style:{fontSize:'20px',fontWeight:'900',color:'#eab308'}}, 'P2: ' + p2Score + ' puan (' + territory.p2 + '%)')
         ),
-        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'18px',fontSize:'18px'}}, 'Yeni Oyun')
+        h('button', {onClick:handleReset, className:'btn btn-play', style:{width:'100%',padding:'18px',fontSize:'18px'}}, 'Yeni Oyun')
       )
     ),
     
