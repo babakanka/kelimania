@@ -7,8 +7,6 @@
     
     <meta name="theme-color" content="#7c3aed">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
     <link rel="manifest" href="/manifest.json">
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -17,11 +15,10 @@
     
     <style>
         * {
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none;
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
         }
         
         body { 
@@ -30,28 +27,90 @@
             touch-action: manipulation;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             height: 100vh;
+            position: fixed;
+            width: 100vw;
         }
         
-        #root { 
+        #root {
             width: 100vw;
             height: 100vh;
             display: flex;
             flex-direction: column;
         }
         
-        /* Board Container - MAXIMIZED */
+        /* Score Bar - Super Compact */
+        .score-bar {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+            background: transparent;
+        }
+        
+        .score-item {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .score-item.p1 {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .score-item.p2 {
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+        }
+        
+        .score-item.active {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .bag-info {
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* Board - FILL ALL SPACE */
         .board-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 4px;
-            overflow: hidden;
+            padding: 8px;
+            position: relative;
+        }
+        
+        .board-grid {
+            display: grid;
+            gap: 1px;
+            width: 100%;
+            height: 100%;
+            max-width: min(100vw - 16px, 100vh - 280px);
+            max-height: min(100vw - 16px, 100vh - 280px);
+            background: white;
+            padding: 3px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
         }
         
         .board-cell {
             aspect-ratio: 1;
-            border: 1px solid #cbd5e0;
+            border: 1px solid #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -59,21 +118,19 @@
             user-select: none;
             touch-action: manipulation;
             transition: transform 0.1s;
-            border-radius: 2px;
-            background: white;
-            font-size: 8px;
-        }
-        
-        @media (min-width: 400px) {
-            .board-cell { font-size: 9px; }
-        }
-        
-        @media (min-width: 500px) {
-            .board-cell { font-size: 10px; }
+            border-radius: 3px;
+            background: #fefefe;
+            font-size: clamp(7px, 2vw, 11px);
+            cursor: pointer;
         }
         
         .board-cell:active {
             transform: scale(0.95);
+        }
+        
+        .board-cell.drag-over {
+            background: #e0e7ff !important;
+            border: 2px solid #6366f1;
         }
         
         .triple-letter { 
@@ -94,90 +151,99 @@
             border-color: #d97706;
         }
         
-        /* Letter Tiles - BIGGER */
+        /* Word Preview Tooltip */
+        .word-tooltip {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            z-index: 100;
+            animation: tooltip-pop 0.2s;
+            border: 3px solid #10b981;
+        }
+        
+        @keyframes tooltip-pop {
+            0% { transform: translateX(-50%) scale(0.8); opacity: 0; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+        
+        /* Hand Container */
+        .hand-container {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            padding: 8px;
+            background: white;
+        }
+        
         .letter-tile {
+            width: 52px;
+            height: 52px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 20px;
             transition: all 0.2s;
             box-shadow: 
-                0 2px 4px rgba(0,0,0,0.1),
+                0 2px 6px rgba(0,0,0,0.15),
                 inset 0 -2px 0 rgba(0,0,0,0.1),
                 inset 0 1px 0 rgba(255,255,255,0.5);
-            touch-action: manipulation;
+            touch-action: none;
+            cursor: grab;
+            position: relative;
         }
         
         .letter-tile:active {
-            transform: scale(0.95);
+            cursor: grabbing;
+        }
+        
+        .letter-tile.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
         }
         
         .letter-tile.selected {
             box-shadow: 
                 0 0 0 3px #10b981,
-                0 4px 8px rgba(16, 185, 129, 0.4);
+                0 4px 12px rgba(16, 185, 129, 0.5);
+            transform: translateY(-4px);
         }
         
-        /* Compact Score Header */
-        .score-bar {
-            display: flex;
-            gap: 4px;
-            padding: 6px 8px;
-            background: rgba(255,255,255,0.95);
-            backdrop-filter: blur(10px);
+        .letter-tile.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
         }
         
-        .score-item {
-            flex: 1;
-            padding: 6px 8px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 13px;
-            font-weight: 700;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        
-        .score-item.p1 {
-            background: linear-gradient(135deg, #ef4444, #dc2626);
-        }
-        
-        .score-item.p2 {
-            background: linear-gradient(135deg, #eab308, #ca8a04);
-        }
-        
-        .score-item.active {
-            box-shadow: 0 0 0 2px white, 0 4px 8px rgba(0,0,0,0.2);
-        }
-        
-        /* Control Panel - COMPACT */
+        /* Control Buttons */
         .control-panel {
-            background: white;
             padding: 8px;
+            background: white;
             display: flex;
             flex-direction: column;
             gap: 6px;
         }
         
-        .hand-container {
-            display: flex;
-            gap: 4px;
-            justify-content: center;
-            padding: 4px 0;
-        }
-        
-        /* Buttons - COMPACT */
         .btn {
-            padding: 8px 12px;
-            border-radius: 8px;
+            padding: 10px;
+            border-radius: 10px;
             border: none;
-            font-weight: 700;
-            font-size: 12px;
+            font-weight: 800;
+            font-size: 13px;
             transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
             touch-action: manipulation;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 4px;
+            gap: 6px;
+            cursor: pointer;
         }
         
         .btn:active:not(:disabled) {
@@ -195,40 +261,27 @@
         }
         
         .btn:disabled {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: not-allowed;
         }
         
-        /* Word Preview - COMPACT */
-        .word-preview {
-            background: #f3f4f6;
-            padding: 6px 8px;
-            border-radius: 6px;
-            font-size: 11px;
-            border-left: 3px solid #10b981;
-        }
-        
         /* Message Toast */
-        .message-toast {
+        .toast {
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
-            padding: 12px 24px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-            font-weight: 700;
-            z-index: 100;
+            padding: 16px 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            font-weight: 800;
+            font-size: 16px;
+            z-index: 200;
             animation: toast-pop 0.3s;
         }
         
-        @keyframes toast-pop {
-            0% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-        
-        /* Splash Screen */
+        /* Splash */
         #splash {
             position: fixed;
             inset: 0;
@@ -248,7 +301,6 @@
         
         .splash-logo {
             font-size: 80px;
-            margin-bottom: 16px;
             animation: float 3s ease-in-out infinite;
         }
         
@@ -258,10 +310,11 @@
         }
         
         .splash-text {
-            font-size: 36px;
+            font-size: 40px;
             font-weight: 900;
             color: white;
             text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-top: 16px;
         }
     </style>
 </head>
@@ -274,13 +327,11 @@
     <div id="root"></div>
     
     <script>
-function vibrate(pattern) {
-    if ('vibrate' in navigator) navigator.vibrate(pattern);
-}
+function vibrate(p) { if('vibrate' in navigator) navigator.vibrate(p); }
 
-if ('serviceWorker' in navigator) {
+if('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/service-worker.js').catch(() => {});
+        navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
     });
 }
 
@@ -289,7 +340,7 @@ window.addEventListener('load', () => {
 });
 
 const h = React.createElement;
-const { useState, useEffect } = React;
+const { useState, useRef } = React;
 const { createRoot } = ReactDOM;
 
 const BOARD_SIZE = 15;
@@ -307,33 +358,26 @@ const COMMON_WORDS = [
   'MASA','KAPI','EV','AĞAÇ','ARABA','KITAP','KALEM','DEFTER','OKUL','ÖĞRENCİ',
   'ÖĞRETMEN','ANNE','BABA','KARDEŞ','ARKADAŞ','OYUN','TOP','BAL','SU','YER',
   'GÖK','GÜNEŞ','AY','YILDIZ','DENIZ','DAĞ','ORMAN','ÇİÇEK','BAHÇE','PARK',
-  'HAYVAN','KEDİ','KÖPEK','KUŞ','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ',
-  'ELBİSE','AYAKKABI','ŞAPKA','PANTOLON','GÖMLEK','CEKET','ETEK','İÇ','DIŞ','ÜST',
-  'ALT','SAĞ','SOL','ÖN','ARKA','BÜYÜK','KÜÇÜK','UZUN','KISA','YENİ','ESKİ',
-  'GÜZEL','ÇİRKİN','İYİ','KÖTÜ','SICAK','SOĞUK','AÇIK','KAPALI','KOLAY','ZOR',
-  'HIZLI','YAVAŞ','GENİŞ','DAR','TOK','AÇ','TATLI','TUZLU','EKŞİ','ACI'
+  'HAYVAN','KEDİ','KÖPEK','KUŞ','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ'
 ];
 
 const wordCache = new Map();
-COMMON_WORDS.forEach(word => wordCache.set(word, true));
+COMMON_WORDS.forEach(w => wordCache.set(w, true));
 
 const checkWordWithTDK = async (word) => {
-  const normalized = word.toUpperCase().trim();
-  if (normalized.length < 2) return false;
-  if (wordCache.has(normalized)) return wordCache.get(normalized);
+  const n = word.toUpperCase().trim();
+  if(n.length < 2) return false;
+  if(wordCache.has(n)) return wordCache.get(n);
   
   try {
-    const response = await fetch('https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word=' + encodeURIComponent(normalized));
-    if (!response.ok) {
-      wordCache.set(normalized, false);
-      return false;
-    }
-    const data = await response.json();
-    const isValid = data.valid === true;
-    wordCache.set(normalized, isValid);
-    return isValid;
-  } catch (error) {
-    wordCache.set(normalized, false);
+    const r = await fetch('https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word='+encodeURIComponent(n));
+    if(!r.ok) { wordCache.set(n,false); return false; }
+    const d = await r.json();
+    const v = d.valid === true;
+    wordCache.set(n,v);
+    return v;
+  } catch(e) {
+    wordCache.set(n,false);
     return false;
   }
 };
@@ -379,6 +423,8 @@ function Game() {
   const [showWinner, setShowWinner] = useState(false);
   const [winner, setWinner] = useState(null);
   const [passCount, setPassCount] = useState(0);
+  const [dragTarget, setDragTarget] = useState(null);
+  const [draggingIdx, setDraggingIdx] = useState(null);
   
   const p1Color = '#ef4444';
   const p2Color = '#eab308';
@@ -445,6 +491,64 @@ function Game() {
     return (tempTiles.length===7 ? base*mult*2 : base*mult);
   };
   
+  const handleDragStart = (e, letter, idx) => {
+    if(temp.some(t => t.idx === idx)) return;
+    if(swapMode) return;
+    if(letter === '*') {
+      e.preventDefault();
+      setJokerIdx(idx);
+      setShowJokerModal(true);
+      return;
+    }
+    setDraggingIdx(idx);
+    vibrate(20);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify({letter, idx}));
+  };
+  
+  const handleDragOver = (e, r, c) => {
+    e.preventDefault();
+    if(draggingIdx === null) return;
+    const color = turn===1?p1Color:p2Color;
+    if(board[r][c] || temp.find(t=>t.r===r&&t.c===c)) return;
+    if(!isValid(r,c,color)) return;
+    setDragTarget({r,c});
+  };
+  
+  const handleDragLeave = () => {
+    setDragTarget(null);
+  };
+  
+  const handleDrop = (e, r, c) => {
+    e.preventDefault();
+    setDragTarget(null);
+    if(draggingIdx === null) return;
+    
+    const color = turn===1?p1Color:p2Color;
+    if(board[r][c] || temp.find(t=>t.r===r&&t.c===c)) return;
+    if(!isValid(r,c,color)) {
+      vibrate([50,50,50]);
+      setMsg('⚠️ Rakibe çok yakın!');
+      setTimeout(()=>setMsg(''),2000);
+      setDraggingIdx(null);
+      return;
+    }
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      vibrate(30);
+      const newTemp = [...temp,{r,c,letter:data.letter,idx:data.idx,color,isJoker:false}];
+      setTemp(newTemp);
+      checkWords(newTemp);
+    } catch(err) {}
+    setDraggingIdx(null);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggingIdx(null);
+    setDragTarget(null);
+  };
+  
   const clickCell = (r,c) => {
     if(swapMode) return;
     vibrate(10);
@@ -459,7 +563,7 @@ function Game() {
     if(board[r][c]) return;
     const color = turn===1?p1Color:p2Color;
     if(!isValid(r,c,color)) { 
-      vibrate([50, 50, 50]);
+      vibrate([50,50,50]);
       setMsg('⚠️ Rakibe çok yakın!');
       setTimeout(()=>setMsg(''),2000);
       return;
@@ -493,7 +597,7 @@ function Game() {
   const handlePlay = async () => {
     if(temp.length === 0) return;
     if(wordPreview.invalid.length > 0) {
-      vibrate([100, 50, 100]);
+      vibrate([100,50,100]);
       setMsg('❌ Geçersiz kelime');
       setTimeout(()=>setMsg(''),2000);
       return;
@@ -502,7 +606,7 @@ function Game() {
     const nb = board.map(row => [...row]);
     temp.forEach(t => { nb[t.r][t.c] = {letter:t.letter,color:t.color,isJoker:t.isJoker}; });
     const score = calcScore(temp);
-    vibrate([50, 30, 50]);
+    vibrate([50,30,50]);
     
     if(turn === 1) {
       setP1Score(p1Score + score);
@@ -536,7 +640,7 @@ function Game() {
     if(npc >= 3) {
       setWinner(turn===1?2:1);
       setShowWinner(true);
-      vibrate([100, 50, 100]);
+      vibrate([100,50,100]);
       return;
     }
     setTemp([]);
@@ -556,7 +660,7 @@ function Game() {
   const handleSwap = () => {
     if(selectedSwap.length===0) return;
     if(bag.length < selectedSwap.length) {
-      vibrate([50, 50, 50]);
+      vibrate([50,50,50]);
       setMsg('⚠️ Yetersiz çanta');
       setTimeout(()=>setMsg(''),2000);
       return;
@@ -611,47 +715,30 @@ function Game() {
   const currentHand = turn===1 ? p1Hand : p2Hand;
   const tempScore = calcScore(temp);
   
-  return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh',background:'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'}},
-    // Compact Score Bar
+  return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh'}},
+    // Score Bar
     h('div', {className:'score-bar'},
       h('div', {className:'score-item p1' + (turn===1?' active':'')},
         h('span', null, 'P1'),
         h('span', null, p1Score)
       ),
-      h('div', {
-        style:{
-          padding:'6px 8px',
-          borderRadius:'8px',
-          background:'rgba(107,114,128,0.3)',
-          fontSize:'11px',
-          fontWeight:'700',
-          color:'white',
-          display:'flex',
-          alignItems:'center',
-          gap:'4px'
-        }
-      }, '🎒 ' + bag.length + (passCount>0 ? ' | ⚠️ ' + passCount : '')),
+      h('div', {className:'bag-info'}, '🎒 ' + bag.length),
       h('div', {className:'score-item p2' + (turn===2?' active':'')},
         h('span', null, 'P2'),
         h('span', null, p2Score)
       )
     ),
     
-    // Board - MAXIMIZED
+    // Board
     h('div', {className:'board-container'},
+      (wordPreview.valid.length>0 || wordPreview.invalid.length>0 || temp.length>0) && h('div', {className:'word-tooltip'},
+        wordPreview.valid.length>0 && h('div', {style:{color:'#059669',fontWeight:'800',fontSize:'12px',marginBottom:'4px'}}, '✅ ' + wordPreview.valid.join(', ')),
+        wordPreview.invalid.length>0 && h('div', {style:{color:'#dc2626',fontWeight:'800',fontSize:'12px',marginBottom:'4px'}}, '❌ ' + wordPreview.invalid.join(', ')),
+        temp.length>0 && h('div', {style:{color:'#2563eb',fontWeight:'900',fontSize:'14px'}}, '+' + tempScore + ' puan')
+      ),
       h('div', {
-        style:{
-          display:'grid',
-          gridTemplateColumns:'repeat('+BOARD_SIZE+', 1fr)',
-          gap:'1px',
-          width:'100%',
-          maxWidth:'min(100vw, 100vh - 200px)',
-          aspectRatio:'1',
-          background:'white',
-          padding:'2px',
-          borderRadius:'8px',
-          boxShadow:'0 4px 12px rgba(0,0,0,0.15)'
-        }
+        className:'board-grid',
+        style:{gridTemplateColumns:'repeat('+BOARD_SIZE+', 1fr)'}
       },
         ...Array(BOARD_SIZE).fill(null).map((_,r) => 
           Array(BOARD_SIZE).fill(null).map((__,c) => {
@@ -660,16 +747,21 @@ function Game() {
             const isTL = TRIPLE_LETTER.some(([x,y]) => x===r&&y===c);
             const isDW = DOUBLE_WORD.some(([x,y]) => x===r&&y===c);
             const isCS = r===7 && c===7;
+            const isDragOver = dragTarget && dragTarget.r===r && dragTarget.c===c;
             let cc = 'board-cell';
             if(tile||tempTile) cc += ' font-black';
             else if(isTL) cc += ' triple-letter';
             else if(isDW) cc += ' double-word';
             else if(isCS) cc += ' center-star';
+            if(isDragOver) cc += ' drag-over';
             const dt = tempTile||tile;
             return h('div', {
               key:r+'-'+c,
               className:cc,
               onClick:()=>clickCell(r,c),
+              onDragOver:(e)=>handleDragOver(e,r,c),
+              onDragLeave:handleDragLeave,
+              onDrop:(e)=>handleDrop(e,r,c),
               style:dt ? {backgroundColor:dt.color,color:'white'} : {}
             }, dt ? dt.letter+(dt.isJoker?'★':'') : isTL?'3H':isDW?'2K':isCS?'★':'');
           })
@@ -677,99 +769,86 @@ function Game() {
       )
     ),
     
-    // Control Panel - COMPACT
-    h('div', {className:'control-panel'},
-      // Hand
-      h('div', {className:'hand-container'},
-        ...currentHand.map((letter,idx) => {
-          const isUsed = temp.some(t => t.idx===idx);
-          const isSelected = selectedSwap.includes(idx);
-          const isActive = selectedLetter && selectedLetter.idx === idx;
-          return h('div', {
-            key:idx,
-            onClick:() => handleLetterClick(letter, idx),
-            className:'letter-tile',
+    // Hand
+    h('div', {className:'hand-container'},
+      ...currentHand.map((letter,idx) => {
+        const isUsed = temp.some(t => t.idx===idx);
+        const isSelected = selectedSwap.includes(idx);
+        const isActive = selectedLetter && selectedLetter.idx === idx;
+        const isDragging = draggingIdx === idx;
+        return h('div', {
+          key:idx,
+          draggable:!isUsed && !swapMode,
+          onDragStart:(e)=>handleDragStart(e,letter,idx),
+          onDragEnd:handleDragEnd,
+          onClick:() => handleLetterClick(letter, idx),
+          className:'letter-tile' + 
+            (isUsed ? ' disabled' : '') +
+            (isActive ? ' selected' : '') +
+            (isDragging ? ' dragging' : ''),
+          style:{
+            border: isUsed ? '2px solid #d1d5db' :
+                    isActive ? '3px solid #10b981' :
+                    isSelected ? '3px solid #3b82f6' :
+                    '3px solid #f59e0b',
+            background: isUsed ? '#f3f4f6' :
+                        isActive ? '#d1fae5' :
+                        isSelected ? '#dbeafe' :
+                        'linear-gradient(135deg, #fef3c7, #fde047)'
+          }
+        },
+          letter==='*' ? '⭐' : letter,
+          !isUsed && letter!=='*' && h('span', {
             style:{
-              width:'48px',
-              height:'48px',
-              display:'flex',
-              flexDirection:'column',
-              alignItems:'center',
-              justifyContent:'center',
-              border: isUsed ? '2px solid #d1d5db' :
-                      isActive ? '3px solid #10b981' :
-                      isSelected ? '3px solid #3b82f6' :
-                      '2px solid #f59e0b',
-              borderRadius:'8px',
-              background: isUsed ? '#f3f4f6' :
-                          isActive ? '#d1fae5' :
-                          isSelected ? '#dbeafe' :
-                          'linear-gradient(135deg, #fef3c7, #fde047)',
-              fontWeight:'900',
-              fontSize:'18px',
-              opacity: isUsed ? 0.4 : 1,
-              cursor: isUsed ? 'not-allowed' : 'pointer',
-              position:'relative'
+              position:'absolute',
+              bottom:'4px',
+              right:'6px',
+              fontSize:'10px',
+              fontWeight:'800',
+              color:'#6b7280',
+              background:'rgba(255,255,255,0.9)',
+              padding:'2px 4px',
+              borderRadius:'4px'
             }
-          },
-            letter==='*' ? '⭐' : letter,
-            !isUsed && letter!=='*' && h('span', {
-              style:{
-                position:'absolute',
-                bottom:'2px',
-                right:'4px',
-                fontSize:'9px',
-                fontWeight:'700',
-                color:'#6b7280',
-                background:'rgba(255,255,255,0.8)',
-                padding:'0 3px',
-                borderRadius:'3px'
-              }
-            }, POINTS[letter]||0)
-          );
-        })
-      ),
-      
-      // Word Preview
-      (wordPreview.valid.length>0 || wordPreview.invalid.length>0 || temp.length>0) && h('div', {className:'word-preview'},
-        wordPreview.valid.length>0 && h('div', {style:{color:'#059669',fontWeight:'700',fontSize:'10px'}}, '✅ ' + wordPreview.valid.join(', ')),
-        wordPreview.invalid.length>0 && h('div', {style:{color:'#dc2626',fontWeight:'700',fontSize:'10px'}}, '❌ ' + wordPreview.invalid.join(', ')),
-        temp.length>0 && h('div', {style:{color:'#2563eb',fontWeight:'900',fontSize:'12px'}}, '+' + tempScore + ' puan')
-      ),
-      
-      // Buttons
-      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'4px'}},
-        temp.length>0 && h('button', {onClick:handlePlay, disabled:checking||wordPreview.invalid.length>0, className:'btn btn-primary', style:{gridColumn:'span 4'}}, checking ? '⏳' : '▶️ Oyna'),
-        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary', style:{fontSize:'10px'}}, '↶'),
-        h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn btn-secondary', style:{fontSize:'10px'}}, '🔀'),
+          }, POINTS[letter]||0)
+        );
+      })
+    ),
+    
+    // Controls
+    h('div', {className:'control-panel'},
+      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'6px'}},
+        temp.length>0 && h('button', {onClick:handlePlay, disabled:checking||wordPreview.invalid.length>0, className:'btn btn-primary', style:{gridColumn:'span 4'}}, checking ? '⏳ Kontrol' : '▶️ Oyna'),
+        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, '↶'),
+        h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn btn-secondary'}, '🔀'),
         swapMode ?
-          h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white',fontSize:'10px'}}, '✓ ' + selectedSwap.length) :
-          h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white',fontSize:'10px'}}, '🔄'),
-        h('button', {onClick:handlePass, className:'btn btn-secondary', style:{fontSize:'10px'}}, '⏭️')
+          h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, '✓ ' + selectedSwap.length) :
+          h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, '🔄'),
+        h('button', {onClick:handlePass, className:'btn btn-secondary'}, '⏭️')
       )
     ),
     
-    // Message Toast
-    msg && h('div', {className:'message-toast'}, msg),
+    // Toast
+    msg && h('div', {className:'toast'}, msg),
     
-    // Winner Modal
-    showWinner && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
-      h('div', {style:{background:'white',padding:'24px',borderRadius:'16px',textAlign:'center',maxWidth:'320px',width:'100%'}},
-        h('div', {style:{fontSize:'64px',marginBottom:'16px'}}, '🏆'),
-        h('h2', {style:{fontSize:'24px',fontWeight:'900',marginBottom:'16px'}}, 'Oyuncu ' + winner + ' Kazandı!'),
-        h('div', {style:{background:'#f3f4f6',padding:'12px',borderRadius:'8px',marginBottom:'16px'}},
-          h('p', {style:{fontSize:'16px',fontWeight:'700',marginBottom:'8px'}}, 'P1: ' + p1Score),
-          h('p', {style:{fontSize:'16px',fontWeight:'700'}}, 'P2: ' + p2Score)
+    // Winner
+    showWinner && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
+      h('div', {style:{background:'white',padding:'32px',borderRadius:'24px',textAlign:'center',maxWidth:'320px',width:'100%'}},
+        h('div', {style:{fontSize:'72px',marginBottom:'16px'}}, '🏆'),
+        h('h2', {style:{fontSize:'28px',fontWeight:'900',marginBottom:'16px'}}, 'Oyuncu ' + winner + ' Kazandı!'),
+        h('div', {style:{background:'#f3f4f6',padding:'16px',borderRadius:'12px',marginBottom:'20px'}},
+          h('p', {style:{fontSize:'18px',fontWeight:'800',marginBottom:'8px'}}, 'P1: ' + p1Score),
+          h('p', {style:{fontSize:'18px',fontWeight:'800'}}, 'P2: ' + p2Score)
         ),
-        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'12px'}}, '🔄 Yeni Oyun')
+        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'16px',fontSize:'16px'}}, '🔄 Yeni Oyun')
       )
     ),
     
-    // Joker Modal
-    showJokerModal && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.6)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
-      h('div', {style:{background:'white',padding:'20px',borderRadius:'16px',maxWidth:'360px',width:'100%'}},
-        h('h3', {style:{fontSize:'18px',fontWeight:'900',marginBottom:'12px',textAlign:'center'}}, '⭐ Joker Seç'),
-        h('div', {style:{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:'6px',marginBottom:'12px'}},
+    // Joker
+    showJokerModal && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
+      h('div', {style:{background:'white',padding:'24px',borderRadius:'20px',maxWidth:'380px',width:'100%'}},
+        h('h3', {style:{fontSize:'20px',fontWeight:'900',marginBottom:'16px',textAlign:'center'}}, '⭐ Joker Seç'),
+        h('div', {style:{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:'8px',marginBottom:'16px'}},
           ...LETTERS.map(letter => 
             h('button', {
               key:letter,
@@ -788,15 +867,15 @@ function Game() {
               style:{
                 aspectRatio:'1',
                 background:'linear-gradient(135deg, #fef3c7, #fde047)',
-                border:'2px solid #f59e0b',
+                border:'3px solid #f59e0b',
                 fontWeight:'900',
-                fontSize:'14px',
+                fontSize:'16px',
                 padding:'0'
               }
             }, letter)
           )
         ),
-        h('button', {onClick:() => { vibrate(15); setShowJokerModal(false); setJokerIdx(null); }, className:'btn btn-secondary', style:{width:'100%'}}, 'İptal')
+        h('button', {onClick:() => { vibrate(15); setShowJokerModal(false); setJokerIdx(null); }, className:'btn btn-secondary', style:{width:'100%',padding:'14px'}}, 'İptal')
       )
     )
   );
