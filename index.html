@@ -107,28 +107,6 @@
             50% { transform: scale(1.05); }
         }
         
-        /* Install prompt */
-        #install-prompt {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            right: 20px;
-            background: white;
-            padding: 16px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: none;
-            z-index: 1000;
-        }
-        #install-prompt.show {
-            display: block;
-            animation: slideUp 0.3s;
-        }
-        @keyframes slideUp {
-            from { transform: translateY(100px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
         @media (max-width: 768px) {
             .board-cell {
                 font-size: 6px;
@@ -144,51 +122,9 @@
         <div class="splash-subtitle">Türkçe Kelime Oyunu</div>
     </div>
     
-    <!-- Install Prompt -->
-    <div id="install-prompt">
-        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
-            <strong style="font-size: 16px;">📱 Ana Ekrana Ekle</strong>
-            <button onclick="closeInstallPrompt()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
-        </div>
-        <p style="margin: 0 0 12px 0; font-size: 14px; color: #666;">Offline oynamak için uygulamayı yükle!</p>
-        <button id="install-button" style="width: 100%; background: #7c3aed; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
-            Yükle
-        </button>
-    </div>
-    
     <div id="root"></div>
     
     <script>
-// PWA Installation
-let deferredPrompt;
-const installPrompt = document.getElementById('install-prompt');
-const installButton = document.getElementById('install-button');
-
-window.addEventListener('beforeinstallprompt', (e) => {
-    e.preventDefault();
-    deferredPrompt = e;
-    
-    // Show install prompt after 3 seconds
-    setTimeout(() => {
-        installPrompt.classList.add('show');
-    }, 3000);
-});
-
-installButton.addEventListener('click', async () => {
-    if (!deferredPrompt) return;
-    
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response: ${outcome}`);
-    
-    deferredPrompt = null;
-    installPrompt.classList.remove('show');
-});
-
-function closeInstallPrompt() {
-    installPrompt.classList.remove('show');
-}
-
 // Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
@@ -205,8 +141,7 @@ window.addEventListener('load', () => {
     }, 2000);
 });
 
-const h = React.createElement;
-// KeliMania v2 - Mobile Optimized with Click System
+// Game code
 const h = React.createElement;
 const { useState } = React;
 const { createRoot } = ReactDOM;
@@ -222,58 +157,44 @@ const POINTS = {
 
 const LETTERS = ['A','B','C','Ç','D','E','F','G','Ğ','H','I','İ','J','K','L','M','N','O','Ö','P','R','S','Ş','T','U','Ü','V','Y','Z'];
 
-// Expanded word list - 1000+ common Turkish words
 const COMMON_WORDS = [
   'MASA','KAPI','EV','AĞAÇ','ARABA','KITAP','KALEM','DEFTER','OKUL','ÖĞRENCİ',
   'ÖĞRETMEN','ANNE','BABA','KARDEŞ','ARKADAŞ','OYUN','TOP','BAL','SU','YER',
   'GÖK','GÜNEŞ','AY','YILDIZ','DENIZ','DAĞ','ORMAN','ÇİÇEK','BAHÇE','PARK',
-  'HAYVAN','KEDİ','KÖPEK','KUŞH','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ',
+  'HAYVAN','KEDİ','KÖPEK','KUŞ','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ',
   'ELBİSE','AYAKKABI','ŞAPKA','PANTOLON','GÖMLEK','CEKET','ETEK','İÇ','DIŞ','ÜST',
   'ALT','SAĞ','SOL','ÖN','ARKA','BÜYÜK','KÜÇÜK','UZUN','KISA','YENİ',
   'ESKİ','GÜZEL','ÇİRKİN','İYİ','KÖTÜ','SICAK','SOĞUK','AÇIK','KAPALI','KOLAY',
-  'ZOR','HIZLI','YAVAS','GENIŞ','DAR','TOK','AÇ','TATLI','TUZLU','EKŞİ',
+  'ZOR','HIZLI','YAVAŞ','GENİŞ','DAR','TOK','AÇ','TATLI','TUZLU','EKŞİ',
   'ACI','SERT','YUMUŞAK','KURU','ISLAK','TEMİZ','KİRLİ','DOLU','BOŞ','AĞIR',
   'HAFİF','YAKIN','UZAK','YENİDEN','ESKİDEN','ŞİMDİ','SONRA','ÖNCE','HER','HİÇ',
   'BİR','İKİ','ÜÇ','DÖRT','BEŞ','ALTI','YEDİ','SEKİZ','DOKUZ','ON',
-  'YÜZBIN','MİLYON','BUGÜN','DÜN','YARIN','GÜN','AY','YIL','SAAT','DAKİKA',
+  'YÜZ','BİN','MİLYON','BUGÜN','DÜN','YARIN','GÜN','AY','YIL','SAAT','DAKİKA',
   'SANİYE','HAFTA','İLKBAHAR','YAZ','SONBAHAR','KIŞ','OCAK','ŞUBAT','MART','NİSAN',
   'MAYIS','HAZİRAN','TEMMUZ','AĞUSTOS','EYLÜL','EKİM','KASIM','ARALIK','PAZARTESİ','SALI',
   'ÇARŞAMBA','PERŞEMBE','CUMA','CUMARTESİ','PAZAR','SABAH','ÖĞLE','AKŞAM','GECE','YEMEK',
-  'KAHVALTI','ÖĞLE','AKŞAM','İÇMEK','YEMEK','UYUMAK','KALKMAK','GİTMEK','GELMEK','ALMAK',
+  'KAHVALTI','İÇMEK','UYUMAK','KALKMAK','GİTMEK','GELMEK','ALMAK','GÖRMEK','BAKMAK',
   'VERMEK','YAPMAK','ETMEK','OLMAK','BULUNMAK','ÇALIŞMAK','OYNAMAK','OKUMAK','YAZMAK','KONUŞMAK',
-  'DINLEMEK','GÖRMEK','BAKMAK','İŞİTMEK','DUYMAK','ANLAMAK','DÜŞÜNMEK','BİLMEK','ÖĞRENMEK','UNUTMAK',
-  'HATIRLAMAK','İSTEMEK','SEVMEKİSTEMEMEK','NEFRET','KORKMAK','KORKUTMAK','GÜLMEK','AĞLAMAK','ŞAŞIRMAK',
+  'DİNLEMEK','İŞİTMEK','DUYMAK','ANLAMAK','DÜŞÜNMEK','BİLMEK','ÖĞRENMEK','UNUTMAK','SEVMEKİ',
+  'HATIRLAMAK','İSTEMEK','KORKMAK','GÜLMEK','AĞLAMAK','ŞAŞIRMAK','DERS','SINIF','TAHTAÇ',
   'PROJE','PLAN','İŞ','GÖREV','SORUN','ÇÖZÜM','FİKİR','DÜŞÜNCE','AKIL','BİLGİ',
-  'BİLİM','SANAT','MÜZİK','RESİM','HEYKELEDEBİYAT','ŞİİR','ROMAN','ÖYKÜ','TİYATRO',
-  'SİNEMA','SPOR','FUTBOL','BASKETBOL','VOLEYBOL','TENİS','YÜZME','KOŞU','ATLAMAYÜRÜYÜŞ','BİSİKLET',
-  'ARABA','OTOBÜS','TREN','UÇAK','GEMİ','VAPUR','MOTOR','TAKSİ','METROTRAMVAY','MİNİBÜS',
-  'KAMYON','AMBULANS','İTFAİYE','POLİS','ASKER','DOKTOR','HEMŞİRE','MÜHENDİS','ÖĞRETMEN','AVUKAT',
-  'SANATÇI','RESSAM','YAZAR','ŞAİR','MÜZİSYEN','OYUNCU','YÖNETMEN','PRODÜKTÖRELEKTRİKÇİ','TESISATÇI',
-  'İNŞAAT','BINA','APARTMAN','VILLA','ÇATI','DUVAR','PENCERE','KAPI','MERDIVEN','ASANSÖR',
-  'BALKON','TERAS','SALON','MUTFAK','BANYO','YATAK','ODASI','ÇOCUK','MİSAFİR','KORIDOR',
-  'ÇEKİÇ','TORNAVIDA','TESTERE','MATKAP','PENSE','ANAHTAR','BOYA','FIRÇA','KOVAKERESTEÇİVİ'
+  'BİLİM','SANAT','MÜZİK','RESİM','HEYKEL','EDEBİYAT','ŞİİR','ROMAN','ÖYKÜ','TİYATRO',
+  'SİNEMA','SPOR','FUTBOL','BASKETBOL','VOLEYBOL','TENİS','YÜZME','KOŞU','ATLAMA','YÜRÜYÜŞ'
 ];
 
 const wordCache = new Map();
-
-// Populate cache with common words
 COMMON_WORDS.forEach(word => wordCache.set(word, true));
 
 const checkWordWithTDK = async (word) => {
   const normalized = word.toUpperCase().trim();
   if (normalized.length < 2) return false;
   
-  console.log('🔍 Kelime kontrol:', normalized);
-  
   if (wordCache.has(normalized)) {
-    const result = wordCache.get(normalized);
-    console.log('💾 Cache:', normalized, result ? '✅' : '❌');
-    return result;
+    return wordCache.get(normalized);
   }
   
   try {
     const apiUrl = 'https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word=' + encodeURIComponent(normalized);
-    console.log('🌐 API çağrısı:', apiUrl);
     const response = await fetch(apiUrl, { method: 'GET' });
     if (!response.ok) {
       wordCache.set(normalized, false);
@@ -281,11 +202,9 @@ const checkWordWithTDK = async (word) => {
     }
     const data = await response.json();
     const isValid = data.valid === true;
-    console.log(isValid ? '✅ GEÇERLİ' : '❌ GEÇERSİZ', normalized);
     wordCache.set(normalized, isValid);
     return isValid;
   } catch (error) {
-    console.error('💥 Hata:', error.message);
     wordCache.set(normalized, false);
     return false;
   }
