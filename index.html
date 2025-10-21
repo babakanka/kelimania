@@ -481,73 +481,54 @@ const COMMON_WORDS = [
   'SINIF','TAHTA','AÇMAK','KAPAMAK','BAKMAK','KOŞMAK','YÜRÜMEK'
 ];
 
-// Kapsamlı Offline Türkçe Sözlük - 1500+ kelime
-const OFFLINE_DICTIONARY = new Set([
-  'AB','AC','AD','AF','AH','AK','AL','AM','AN','AR','AS','AT','AV','AY','AZ','BA','BE','BI','BU','DA','DE','DI','DO','EF','EK','EL','EM','EN','ER','ES','ET','EV','EY','HA','HE','HI','IK','IZ','İK','İL','İM','İN','İP','İR','İS','İT','İZ','KA','KE','KI','KO','KU','LA','MA','ME','MI','MU','NA','NE','NI','NU','OD','OF','OH','OK','OL','OM','ON','OR','OS','OT','OY','ÖD','ÖF','ÖK','ÖN','ÖP','ÖR','ÖT','ÖZ','PA','PE','PI','PU','RA','RE','RU','SA','SE','SI','SO','SU','ŞE','ŞU','TA','TE','TI','TO','TU','UK','UM','UN','US','UT','UZ','ÜÇ','ÜM','ÜN','ÜS','ÜT','ÜZ','VA','VE','VI','VU','YA','YE','YI','YO','YU','ZA','ZE',
-  'ACI','AÇIK','ADA','AĞAÇ','AĞIR','ALAN','ALTI','ALTIN','ANNE','ARABA','ASKER','AYAK','BABA','BAĞ','BAHÇE','BALIK','BANKA','BAHAR','BAŞ','BEBEK','BEYAZ','BİLGİ','BİR','BIRA','BOL','BOŞ','BÖREK','BULUT','BÜYÜK','CAMİ','CAN','CEVAP','ÇAY','ÇANTA','ÇİÇEK','ÇOCUK','DAĞ','DENIZ','DOĞA','DOST','DÜNYA','EKMEK','GEM','GEMİ','GÜNEŞ','HAYAT','KALEM','KALE','KEDİ','KÖPEK','MASA','SAF','YEMEK',
-  'GÖZLEM','GÖZLEMEK','GÖZLÜK','GÖRMEK','GÖKYÜZÜ','GÖREV','GÜMÜŞ','GÜN','GÜNDEM','GÜVEN','HAK','HAKLI','HALAT','HALK','HATA','HAVA','HAYVAN','HER','HERKESİ','HİÇ','HOŞÇA','İÇ','İÇMEK','İKİ','İLK','İNSAN','İŞ','İYİ','KAHVE','KANAL','KAPALI','KAPI','KARDEŞ','KARI','KOCA','KOL','KÖY','KÜÇÜK','KÜPE','LOK','MASA','MİLYON','MODA','MOLA','MOR',
-  'NANE','NARENCIYE','NE','NEDEN','NERE','NESİL','NOTER','OĞLAN','OKUL','OLAY','OLMAK','ONAY','OYUN','ÖDEV','ÖĞRENCİ','ÖĞRETMEN','ÖMÜR','ÖN','ÖNCE','ÖRNEKŞEHİR','ÖZEL','PAKET','PARA','PARK','PEMBE','PİRİNÇ','PLAN','PROJE','RADYO','RAHAT','REKLAM','RENK','RESİM',
-  'SAAT','SABAH','SAÇ','SAF','SAHNE','SALI','SALON','SAMI','SANDALYE','SARAY','SARI','SATIŞ','SAVAŞ','SES','SEÇMEK','SEBZE','SEVMEK','SEYAHAT','SİGARA','SİNEMA','SİYAH','SOKAK','SOĞUK','SONRA','SORU','SÖRF','SPOR','SU','SUÇLU','SÜPER','SÜREÇ','SÜRÜ','ŞEHİR','ŞEKER','ŞEMSIYE','ŞİMDİ','ŞİRKET','ŞOFÖR','ŞUBAT','TABLO','TAKSİ','TATIL','TAVUK','TAZMİNAT','TEK',
-  'TELEFON','TELEVİZYON','TEMİZ','TERBİYE','TERSANE','TEŞEKKÜR','TEZGAH','TİYATRO','TOPLAM','TOPLANMAK','TOST','TURUNCU','TUZ','UÇ','UÇAK','UÇUŞ','UZAK','ÜZGÜN','ÜZÜM','VAKİT','VATAN','VATANDAŞ','VE','VERMEK','YAKIN','YAKINDA','YALAN','YALNIZ','YAPMAK','YARGI','YARIN','YAŞLI','YAZ','YAZMAK','YEMEK','YENİ','YER','YEŞİL','YETİŞKİN','YOK','YOL','YORGUN','YURT','YÜZ','ZEMİN','ZENGİN','ZİNCİR'
-]);
-
+// 🔥 SADECE TDK - SINIR YOK!
 const wordCache = new Map();
-// Offline sözlüğü cache'e yükle
-OFFLINE_DICTIONARY.forEach(w => wordCache.set(w, true));
 
 const checkWordWithTDK = async (word) => {
   const normalized = word.toUpperCase().trim();
   if(normalized.length < 2) return false;
   
-  // Önce offline sözlüğe bak
-  if(OFFLINE_DICTIONARY.has(normalized)) {
-    console.log('📚 Offline dictionary hit:', normalized);
-    return true;
-  }
-  
-  // Cache kontrolü
+  // Cache kontrolü (daha önce kontrol edilmiş kelimeler)
   if(wordCache.has(normalized)) {
     console.log('✅ Cache hit:', normalized, '→', wordCache.get(normalized));
     return wordCache.get(normalized);
   }
   
   try {
-    // Vercel API'yi dene
-    console.log('🔍 Checking Vercel API:', normalized);
-    const vercelUrl = 'https://kelimania.vercel.app/api/check-word?word=' + encodeURIComponent(normalized);
-    const vercelResponse = await fetch(vercelUrl);
-    
-    if(vercelResponse.ok) {
-      const vercelData = await vercelResponse.json();
-      const isValid = vercelData.valid === true;
-      console.log('🌐 Vercel result:', normalized, '→', isValid);
-      wordCache.set(normalized, isValid);
-      return isValid;
-    }
-    
-    // Vercel başarısız olursa direkt TDK'yi dene
-    console.log('🔄 Trying TDK fallback:', normalized);
+    // Direkt TDK'ya bağlan!
+    console.log('🔍 TDK\'da arıyorum:', normalized);
     const tdkUrl = 'https://sozluk.gov.tr/gts?ara=' + encodeURIComponent(normalized);
-    const tdkResponse = await fetch(tdkUrl);
+    
+    const tdkResponse = await fetch(tdkUrl, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json',
+      },
+      mode: 'cors'
+    });
     
     if(tdkResponse.ok) {
       const tdkData = await tdkResponse.json();
       const isValid = Array.isArray(tdkData) && tdkData.length > 0;
-      console.log('📖 TDK result:', normalized, '→', isValid);
+      
+      if(isValid) {
+        console.log('✅ TDK ONAYLADI:', normalized);
+      } else {
+        console.log('❌ TDK\'da bulunamadı:', normalized);
+      }
+      
       wordCache.set(normalized, isValid);
       return isValid;
     }
     
-    console.log('❌ All APIs failed for:', normalized);
+    console.log('⚠️ TDK bağlantı hatası:', normalized);
     wordCache.set(normalized, false);
     return false;
     
   } catch(error) {
-    console.error('💥 Error checking word:', normalized, error);
-    // Hata durumunda offline sözlüğe tekrar bak
-    if(OFFLINE_DICTIONARY.has(normalized)) {
-      console.log('📚 Fallback to offline dictionary:', normalized);
-      return true;
+    console.error('💥 TDK hatası:', normalized, error);
+    wordCache.set(normalized, false);
+    return false;
     }
     wordCache.set(normalized, false);
     return false;
