@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>KeliMania</title>
+    
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/manifest.json">
+    
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body { 
+            font-family: -apple-system, system-ui, sans-serif;
+            overflow: hidden;
+            touch-action: manipulation;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            position: fixed;
+            width: 100vw;
+        }
+        
+        #root {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Score Bar - Super Compact */
+        .score-bar {
+            display: flex;
+            gap: 4px;
+            padding: 8px;
+            background: transparent;
+        }
+        
+        .score-item {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 14px;
+            font-weight: 800;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .score-item.p1 {
+            background: linear-gradient(135deg, #ef4444, #dc2626);
+        }
+        
+        .score-item.p2 {
+            background: linear-gradient(135deg, #eab308, #ca8a04);
+        }
+        
+        .score-item.active {
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .bag-info {
+            padding: 8px 12px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.25);
+            backdrop-filter: blur(10px);
+            font-size: 12px;
+            font-weight: 800;
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        /* Board - FILL ALL SPACE */
+        .board-container {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            position: relative;
+        }
+        
+        .board-grid {
+            display: grid;
+            gap: 1px;
+            width: 100%;
+            height: 100%;
+            max-width: min(100vw - 16px, 100vh - 280px);
+            max-height: min(100vw - 16px, 100vh - 280px);
+            background: white;
+            padding: 3px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+        }
+        
+        .board-cell {
+            aspect-ratio: 1;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 900;
+            user-select: none;
+            touch-action: manipulation;
+            transition: transform 0.1s;
+            border-radius: 3px;
+            background: #fefefe;
+            font-size: clamp(7px, 2vw, 11px);
+            cursor: pointer;
+        }
+        
+        .board-cell:active {
+            transform: scale(0.95);
+        }
+        
+        .board-cell.drag-over {
+            background: #e0e7ff !important;
+            border: 2px solid #6366f1;
+        }
+        
+        .triple-letter { 
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            border-color: #2563eb;
+        }
+        
+        .double-word { 
+            background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+            color: white;
+            border-color: #db2777;
+        }
+        
+        .center-star { 
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            border-color: #d97706;
+        }
+        
+        /* Word Preview Tooltip */
+        .word-tooltip {
+            position: absolute;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 12px 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            z-index: 100;
+            animation: tooltip-pop 0.2s;
+            border: 3px solid #10b981;
+        }
+        
+        @keyframes tooltip-pop {
+            0% { transform: translateX(-50%) scale(0.8); opacity: 0; }
+            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+        }
+        
+        /* Hand Container */
+        .hand-container {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+            padding: 8px;
+            background: white;
+        }
+        
+        .letter-tile {
+            width: 52px;
+            height: 52px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-weight: 900;
+            font-size: 20px;
+            transition: all 0.2s;
+            box-shadow: 
+                0 2px 6px rgba(0,0,0,0.15),
+                inset 0 -2px 0 rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.5);
+            touch-action: none;
+            cursor: grab;
+            position: relative;
+        }
+        
+        .letter-tile:active {
+            cursor: grabbing;
+        }
+        
+        .letter-tile.dragging {
+            opacity: 0.5;
+            cursor: grabbing;
+        }
+        
+        .letter-tile.selected {
+            box-shadow: 
+                0 0 0 3px #10b981,
+                0 4px 12px rgba(16, 185, 129, 0.5);
+            transform: translateY(-4px);
+        }
+        
+        .letter-tile.disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+        
+        /* Control Buttons */
+        .control-panel {
+            padding: 8px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        
+        .btn {
+            padding: 10px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 800;
+            font-size: 13px;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            touch-action: manipulation;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            cursor: pointer;
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: scale(0.95);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: linear-gradient(135deg, #6b7280, #4b5563);
+            color: white;
+        }
+        
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        /* Message Toast */
+        .toast {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 16px 32px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+            font-weight: 800;
+            font-size: 16px;
+            z-index: 200;
+            animation: toast-pop 0.3s;
+        }
+        
+        /* Splash */
+        #splash {
+            position: fixed;
+            inset: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+        
+        #splash.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .splash-logo {
+            font-size: 80px;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .splash-text {
+            font-size: 40px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div id="splash">
+        <div class="splash-logo">🎮</div>
+        <div class="splash-text">KeliMania</div>
+    </div>
+    
+    <div id="root"></div>
+    
+    <script>
+function vibrate(p) { if('vibrate' in navigator) navigator.vibrate(p); }
+
+if('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js').catch(()=>{});
+    });
+}
+
+window.addEventListener('load', () => {
+    setTimeout(() => document.getElementById('splash').classList.add('hide'), 1500);
+});
+
+const h = React.createElement;
+const { useState, useRef } = React;
+const { createRoot } = ReactDOM;
+
+const BOARD_SIZE = 15;
+const TRIPLE_LETTER = [[3,3],[3,11],[11,3],[11,11]];
+const DOUBLE_WORD = [[7,3],[7,11],[3,7],[11,7]];
+
+const POINTS = {
+  A:1,B:5,C:6,Ç:6,D:4,E:1,F:8,G:5,Ğ:8,H:6,I:5,İ:5,J:10,K:3,L:3,M:4,
+  N:2,O:5,Ö:7,P:7,R:2,S:4,Ş:6,T:3,U:4,Ü:6,V:7,Y:4,Z:6
+};
+
+const LETTERS = ['A','B','C','Ç','D','E','F','G','Ğ','H','I','İ','J','K','L','M','N','O','Ö','P','R','S','Ş','T','U','Ü','V','Y','Z'];
+
+const COMMON_WORDS = [
+  'MASA','KAPI','EV','AĞAÇ','ARABA','KITAP','KALEM','DEFTER','OKUL','ÖĞRENCİ',
+  'ÖĞRETMEN','ANNE','BABA','KARDEŞ','ARKADAŞ','OYUN','TOP','BAL','SU','YER',
+  'GÖK','GÜNEŞ','AY','YILDIZ','DENIZ','DAĞ','ORMAN','ÇİÇEK','BAHÇE','PARK',
+  'HAYVAN','KEDİ','KÖPEK','KUŞ','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ'
+];
+
+const wordCache = new Map();
+COMMON_WORDS.forEach(w => wordCache.set(w, true));
+
+const checkWordWithTDK = async (word) => {
+  const n = word.toUpperCase().trim();
+  if(n.length < 2) return false;
+  if(wordCache.has(n)) return wordCache.get(n);
+  
+  try {
+    const r = await fetch('https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word='+encodeURIComponent(n));
+    if(!r.ok) { wordCache.set(n,false); return false; }
+    const d = await r.json();
+    const v = d.valid === true;
+    wordCache.set(n,v);
+    return v;
+  } catch(e) {
+    wordCache.set(n,false);
+    return false;
+  }
+};
+
+function Game() {
+  const initBag = () => {
+    const b = [];
+    LETTERS.forEach(l => { for(let i=0;i<3;i++) b.push(l); });
+    for(let i=0;i<3;i++) b.push('*');
+    return b.sort(() => Math.random()-0.5);
+  };
+  
+  const ensureVowels = (hand) => {
+    const vowels = ['A','E','I','İ','O','Ö','U','Ü'];
+    const vc = hand.filter(l => vowels.includes(l)).length;
+    if(vc >= 2) return hand;
+    const nh = [...hand];
+    const ci = [];
+    nh.forEach((l,i) => { if(!vowels.includes(l) && l !== '*') ci.push(i); });
+    const sc = ci.sort(() => Math.random()-0.5);
+    for(let i=0; i<(2-vc) && i<sc.length; i++) {
+      nh[sc[i]] = vowels[Math.floor(Math.random()*vowels.length)];
+    }
+    return nh;
+  };
+  
+  const [bag, setBag] = useState(initBag);
+  const [p1Hand, setP1Hand] = useState(() => ensureVowels(bag.slice(0,7)));
+  const [p2Hand, setP2Hand] = useState(() => ensureVowels(bag.slice(7,14)));
+  const [board, setBoard] = useState(() => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
+  const [temp, setTemp] = useState([]);
+  const [turn, setTurn] = useState(1);
+  const [p1Score, setP1Score] = useState(0);
+  const [p2Score, setP2Score] = useState(0);
+  const [msg, setMsg] = useState('');
+  const [selectedLetter, setSelectedLetter] = useState(null);
+  const [checking, setChecking] = useState(false);
+  const [wordPreview, setWordPreview] = useState({valid:[],invalid:[]});
+  const [jokerIdx, setJokerIdx] = useState(null);
+  const [showJokerModal, setShowJokerModal] = useState(false);
+  const [swapMode, setSwapMode] = useState(false);
+  const [selectedSwap, setSelectedSwap] = useState([]);
+  const [showWinner, setShowWinner] = useState(false);
+  const [winner, setWinner] = useState(null);
+  const [passCount, setPassCount] = useState(0);
+  const [dragTarget, setDragTarget] = useState(null);
+  const [draggingIdx, setDraggingIdx] = useState(null);
+  
+  const p1Color = '#ef4444';
+  const p2Color = '#eab308';
+  
+  const isValid = (r,c,color) => {
+    if(board[r][c]) return false;
+    if(temp.find(t=>t.r===r&&t.c===c)) return false;
+    const dn = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
+    for(const [nr,nc] of dn) {
+      if(nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) continue;
+      const n = board[nr][nc];
+      if(n && n.color!==color) return false;
+      const nt = temp.find(t=>t.r===nr&&t.c===nc);
+      if(nt && nt.color!==color) return false;
+    }
+    return true;
+  };
+  
+  const findWords = (tempTiles) => {
+    if(tempTiles.length === 0) return [];
+    const tb = board.map(row => [...row]);
+    tempTiles.forEach(t => { tb[t.r][t.c] = {letter:t.letter,isNew:true}; });
+    const words = [];
+    for(let r=0; r<BOARD_SIZE; r++) {
+      let w='',hn=false;
+      for(let c=0; c<BOARD_SIZE; c++) {
+        if(tb[r][c]) { w+=tb[r][c].letter; if(tb[r][c].isNew) hn=true; }
+        else { if(w.length>=2&&hn) words.push(w); w=''; hn=false; }
+      }
+      if(w.length>=2&&hn) words.push(w);
+    }
+    for(let c=0; c<BOARD_SIZE; c++) {
+      let w='',hn=false;
+      for(let r=0; r<BOARD_SIZE; r++) {
+        if(tb[r][c]) { w+=tb[r][c].letter; if(tb[r][c].isNew) hn=true; }
+        else { if(w.length>=2&&hn) words.push(w); w=''; hn=false; }
+      }
+      if(w.length>=2&&hn) words.push(w);
+    }
+    if(words.length===0 && tempTiles.length>0) {
+      words.push(tempTiles.map(t=>t.letter).join(''));
+    }
+    return [...new Set(words)];
+  };
+  
+  const checkWords = async (tempTiles) => {
+    if(tempTiles.length === 0) { setWordPreview({valid:[],invalid:[]}); return; }
+    const words = findWords(tempTiles);
+    const results = await Promise.all(words.map(async (w) => ({word:w,valid:await checkWordWithTDK(w)})));
+    setWordPreview({
+      valid: results.filter(r=>r.valid).map(r=>r.word),
+      invalid: results.filter(r=>!r.valid).map(r=>r.word)
+    });
+  };
+  
+  const calcScore = (tempTiles) => {
+    let base=0,mult=1;
+    tempTiles.forEach(t => {
+      let pts = POINTS[t.letter]||0;
+      if(TRIPLE_LETTER.some(([x,y])=>x===t.r&&y===t.c)&&!board[t.r][t.c]) pts*=3;
+      if(DOUBLE_WORD.some(([x,y])=>x===t.r&&y===t.c)&&!board[t.r][t.c]) mult*=2;
+      base+=pts;
+    });
+    return (tempTiles.length===7 ? base*mult*2 : base*mult);
+  };
+  
+  const handleDragStart = (e, letter, idx) => {
+    if(temp.some(t => t.idx === idx)) return;
+    if(swapMode) return;
+    if(letter === '*') {
+      e.preventDefault();
+      setJokerIdx(idx);
+      setShowJokerModal(true);
+      return;
+    }
+    setDraggingIdx(idx);
+    vibrate(20);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', JSON.stringify({letter, idx}));
+  };
+  
+  const handleDragOver = (e, r, c) => {
+    e.preventDefault();
+    if(draggingIdx === null) return;
+    const color = turn===1?p1Color:p2Color;
+    if(board[r][c] || temp.find(t=>t.r===r&&t.c===c)) return;
+    if(!isValid(r,c,color)) return;
+    setDragTarget({r,c});
+  };
+  
+  const handleDragLeave = () => {
+    setDragTarget(null);
+  };
+  
+  const handleDrop = (e, r, c) => {
+    e.preventDefault();
+    setDragTarget(null);
+    if(draggingIdx === null) return;
+    
+    const color = turn===1?p1Color:p2Color;
+    if(board[r][c] || temp.find(t=>t.r===r&&t.c===c)) return;
+    if(!isValid(r,c,color)) {
+      vibrate([50,50,50]);
+      setMsg('⚠️ Rakibe çok yakın!');
+      setTimeout(()=>setMsg(''),2000);
+      setDraggingIdx(null);
+      return;
+    }
+    
+    try {
+      const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+      vibrate(30);
+      const newTemp = [...temp,{r,c,letter:data.letter,idx:data.idx,color,isJoker:false}];
+      setTemp(newTemp);
+      checkWords(newTemp);
+    } catch(err) {}
+    setDraggingIdx(null);
+  };
+  
+  const handleDragEnd = () => {
+    setDraggingIdx(null);
+    setDragTarget(null);
+  };
+  
+  const clickCell = (r,c) => {
+    if(swapMode) return;
+    vibrate(10);
+    const exist = temp.find(t=>t.r===r&&t.c===c);
+    if(exist) { 
+      const newTemp = temp.filter(t=>!(t.r===r&&t.c===c));
+      setTemp(newTemp);
+      checkWords(newTemp);
+      setSelectedLetter(null);
+      return;
+    }
+    if(board[r][c]) return;
+    const color = turn===1?p1Color:p2Color;
+    if(!isValid(r,c,color)) { 
+      vibrate([50,50,50]);
+      setMsg('⚠️ Rakibe çok yakın!');
+      setTimeout(()=>setMsg(''),2000);
+      return;
+    }
+    if(selectedLetter) {
+      vibrate(20);
+      const newTemp = [...temp,{r,c,letter:selectedLetter.letter,idx:selectedLetter.idx,color,isJoker:selectedLetter.isJoker||false}];
+      setTemp(newTemp);
+      checkWords(newTemp);
+      setSelectedLetter(null);
+    }
+  };
+  
+  const handleLetterClick = (letter, idx) => {
+    if(temp.some(t => t.idx === idx)) return;
+    vibrate(15);
+    if(swapMode) {
+      const isSelected = selectedSwap.includes(idx);
+      if(isSelected) setSelectedSwap(selectedSwap.filter(i => i !== idx));
+      else setSelectedSwap([...selectedSwap, idx]);
+      return;
+    }
+    if(letter === '*') {
+      setJokerIdx(idx);
+      setShowJokerModal(true);
+      return;
+    }
+    setSelectedLetter({letter, idx});
+  };
+  
+  const handlePlay = async () => {
+    if(temp.length === 0) return;
+    if(wordPreview.invalid.length > 0) {
+      vibrate([100,50,100]);
+      setMsg('❌ Geçersiz kelime');
+      setTimeout(()=>setMsg(''),2000);
+      return;
+    }
+    setChecking(true);
+    const nb = board.map(row => [...row]);
+    temp.forEach(t => { nb[t.r][t.c] = {letter:t.letter,color:t.color,isJoker:t.isJoker}; });
+    const score = calcScore(temp);
+    vibrate([50,30,50]);
+    
+    if(turn === 1) {
+      setP1Score(p1Score + score);
+      const ui = temp.map(t => t.idx);
+      const nh = p1Hand.filter((_,i) => !ui.includes(i));
+      const dr = bag.slice(0, Math.min(temp.length, bag.length));
+      setP1Hand(ensureVowels([...nh, ...dr]));
+      setBag(bag.slice(dr.length));
+    } else {
+      setP2Score(p2Score + score);
+      const ui = temp.map(t => t.idx);
+      const nh = p2Hand.filter((_,i) => !ui.includes(i));
+      const dr = bag.slice(0, Math.min(temp.length, bag.length));
+      setP2Hand(ensureVowels([...nh, ...dr]));
+      setBag(bag.slice(dr.length));
+    }
+    setBoard(nb);
+    setTemp([]);
+    setWordPreview({valid:[],invalid:[]});
+    setMsg('🎉 +' + score + ' puan');
+    setTimeout(()=>setMsg(''),2000);
+    setTurn(turn===1?2:1);
+    setPassCount(0);
+    setChecking(false);
+  };
+  
+  const handlePass = () => {
+    vibrate(30);
+    const npc = passCount + 1;
+    setPassCount(npc);
+    if(npc >= 3) {
+      setWinner(turn===1?2:1);
+      setShowWinner(true);
+      vibrate([100,50,100]);
+      return;
+    }
+    setTemp([]);
+    setWordPreview({valid:[],invalid:[]});
+    setSelectedLetter(null);
+    setTurn(turn===1?2:1);
+    setMsg('⏭️ Pas');
+    setTimeout(()=>setMsg(''),2000);
+  };
+  
+  const handleShuffle = () => {
+    vibrate(20);
+    if(turn===1) setP1Hand([...p1Hand].sort(()=>Math.random()-0.5));
+    else setP2Hand([...p2Hand].sort(()=>Math.random()-0.5));
+  };
+  
+  const handleSwap = () => {
+    if(selectedSwap.length===0) return;
+    if(bag.length < selectedSwap.length) {
+      vibrate([50,50,50]);
+      setMsg('⚠️ Yetersiz çanta');
+      setTimeout(()=>setMsg(''),2000);
+      return;
+    }
+    vibrate(40);
+    const hand = turn===1 ? p1Hand : p2Hand;
+    const nh = hand.filter((_,i) => !selectedSwap.includes(i));
+    const dr = bag.slice(0, selectedSwap.length);
+    const ret = selectedSwap.map(i => hand[i]);
+    if(turn===1) setP1Hand(ensureVowels([...nh, ...dr]));
+    else setP2Hand(ensureVowels([...nh, ...dr]));
+    setBag([...bag.slice(dr.length), ...ret].sort(()=>Math.random()-0.5));
+    setSwapMode(false);
+    setSelectedSwap([]);
+    setTurn(turn===1?2:1);
+    setMsg('🔄 Değiştirildi');
+    setTimeout(()=>setMsg(''),2000);
+  };
+  
+  const handleUndo = () => {
+    vibrate(15);
+    setTemp([]);
+    setWordPreview({valid:[],invalid:[]});
+    setSelectedLetter(null);
+  };
+  
+  const handleReset = () => {
+    vibrate(50);
+    const nb = initBag();
+    setBag(nb);
+    setP1Hand(ensureVowels(nb.slice(0,7)));
+    setP2Hand(ensureVowels(nb.slice(7,14)));
+    setBoard(Array(BOARD_SIZE).fill(null).map(()=>Array(BOARD_SIZE).fill(null)));
+    setTemp([]);
+    setTurn(1);
+    setP1Score(0);
+    setP2Score(0);
+    setMsg('');
+    setWordPreview({valid:[],invalid:[]});
+    setPassCount(0);
+    setShowWinner(false);
+    setWinner(null);
+    setSelectedLetter(null);
+  };
+  
+  const handleForfeit = () => {
+    vibrate(100);
+    setWinner(turn===1?2:1);
+    setShowWinner(true);
+  };
+  
+  const currentHand = turn===1 ? p1Hand : p2Hand;
+  const tempScore = calcScore(temp);
+  
+  return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh'}},
+    // Score Bar
+    h('div', {className:'score-bar'},
+      h('div', {className:'score-item p1' + (turn===1?' active':'')},
+        h('span', null, 'P1'),
+        h('span', null, p1Score)
+      ),
+      h('div', {className:'bag-info'}, '🎒 ' + bag.length),
+      h('div', {className:'score-item p2' + (turn===2?' active':'')},
+        h('span', null, 'P2'),
+        h('span', null, p2Score)
+      )
+    ),
+    
+    // Board
+    h('div', {className:'board-container'},
+      (wordPreview.valid.length>0 || wordPreview.invalid.length>0 || temp.length>0) && h('div', {className:'word-tooltip'},
+        wordPreview.valid.length>0 && h('div', {style:{color:'#059669',fontWeight:'800',fontSize:'12px',marginBottom:'4px'}}, '✅ ' + wordPreview.valid.join(', ')),
+        wordPreview.invalid.length>0 && h('div', {style:{color:'#dc2626',fontWeight:'800',fontSize:'12px',marginBottom:'4px'}}, '❌ ' + wordPreview.invalid.join(', ')),
+        temp.length>0 && h('div', {style:{color:'#2563eb',fontWeight:'900',fontSize:'14px'}}, '+' + tempScore + ' puan')
+      ),
+      h('div', {
+        className:'board-grid',
+        style:{gridTemplateColumns:'repeat('+BOARD_SIZE+', 1fr)'}
+      },
+        ...Array(BOARD_SIZE).fill(null).map((_,r) => 
+          Array(BOARD_SIZE).fill(null).map((__,c) => {
+            const tile = board[r][c];
+            const tempTile = temp.find(t => t.r===r && t.c===c);
+            const isTL = TRIPLE_LETTER.some(([x,y]) => x===r&&y===c);
+            const isDW = DOUBLE_WORD.some(([x,y]) => x===r&&y===c);
+            const isCS = r===7 && c===7;
+            const isDragOver = dragTarget && dragTarget.r===r && dragTarget.c===c;
+            let cc = 'board-cell';
+            if(tile||tempTile) cc += ' font-black';
+            else if(isTL) cc += ' triple-letter';
+            else if(isDW) cc += ' double-word';
+            else if(isCS) cc += ' center-star';
+            if(isDragOver) cc += ' drag-over';
+            const dt = tempTile||tile;
+            return h('div', {
+              key:r+'-'+c,
+              className:cc,
+              onClick:()=>clickCell(r,c),
+              onDragOver:(e)=>handleDragOver(e,r,c),
+              onDragLeave:handleDragLeave,
+              onDrop:(e)=>handleDrop(e,r,c),
+              style:dt ? {backgroundColor:dt.color,color:'white'} : {}
+            }, dt ? dt.letter+(dt.isJoker?'★':'') : isTL?'3H':isDW?'2K':isCS?'★':'');
+          })
+        ).flat()
+      )
+    ),
+    
+    // Hand
+    h('div', {className:'hand-container'},
+      ...currentHand.map((letter,idx) => {
+        const isUsed = temp.some(t => t.idx===idx);
+        const isSelected = selectedSwap.includes(idx);
+        const isActive = selectedLetter && selectedLetter.idx === idx;
+        const isDragging = draggingIdx === idx;
+        return h('div', {
+          key:idx,
+          draggable:!isUsed && !swapMode,
+          onDragStart:(e)=>handleDragStart(e,letter,idx),
+          onDragEnd:handleDragEnd,
+          onClick:() => handleLetterClick(letter, idx),
+          className:'letter-tile' + 
+            (isUsed ? ' disabled' : '') +
+            (isActive ? ' selected' : '') +
+            (isDragging ? ' dragging' : ''),
+          style:{
+            border: isUsed ? '2px solid #d1d5db' :
+                    isActive ? '3px solid #10b981' :
+                    isSelected ? '3px solid #3b82f6' :
+                    '3px solid #f59e0b',
+            background: isUsed ? '#f3f4f6' :
+                        isActive ? '#d1fae5' :
+                        isSelected ? '#dbeafe' :
+                        'linear-gradient(135deg, #fef3c7, #fde047)'
+          }
+        },
+          letter==='*' ? '⭐' : letter,
+          !isUsed && letter!=='*' && h('span', {
+            style:{
+              position:'absolute',
+              bottom:'4px',
+              right:'6px',
+              fontSize:'10px',
+              fontWeight:'800',
+              color:'#6b7280',
+              background:'rgba(255,255,255,0.9)',
+              padding:'2px 4px',
+              borderRadius:'4px'
+            }
+          }, POINTS[letter]||0)
+        );
+      })
+    ),
+    
+    // Controls
+    h('div', {className:'control-panel'},
+      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'6px'}},
+        temp.length>0 && h('button', {onClick:handlePlay, disabled:checking||wordPreview.invalid.length>0, className:'btn btn-primary', style:{gridColumn:'span 4'}}, checking ? '⏳ Kontrol' : '▶️ Oyna'),
+        h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, '↶'),
+        h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn btn-secondary'}, '🔀'),
+        swapMode ?
+          h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, '✓ ' + selectedSwap.length) :
+          h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn', style:{background:'linear-gradient(135deg, #3b82f6, #2563eb)',color:'white'}}, '🔄'),
+        h('button', {onClick:handlePass, className:'btn btn-secondary'}, '⏭️')
+      )
+    ),
+    
+    // Toast
+    msg && h('div', {className:'toast'}, msg),
+    
+    // Winner
+    showWinner && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
+      h('div', {style:{background:'white',padding:'32px',borderRadius:'24px',textAlign:'center',maxWidth:'320px',width:'100%'}},
+        h('div', {style:{fontSize:'72px',marginBottom:'16px'}}, '🏆'),
+        h('h2', {style:{fontSize:'28px',fontWeight:'900',marginBottom:'16px'}}, 'Oyuncu ' + winner + ' Kazandı!'),
+        h('div', {style:{background:'#f3f4f6',padding:'16px',borderRadius:'12px',marginBottom:'20px'}},
+          h('p', {style:{fontSize:'18px',fontWeight:'800',marginBottom:'8px'}}, 'P1: ' + p1Score),
+          h('p', {style:{fontSize:'18px',fontWeight:'800'}}, 'P2: ' + p2Score)
+        ),
+        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'16px',fontSize:'16px'}}, '🔄 Yeni Oyun')
+      )
+    ),
+    
+    // Joker
+    showJokerModal && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
+      h('div', {style:{background:'white',padding:'24px',borderRadius:'20px',maxWidth:'380px',width:'100%'}},
+        h('h3', {style:{fontSize:'20px',fontWeight:'900',marginBottom:'16px',textAlign:'center'}}, '⭐ Joker Seç'),
+        h('div', {style:{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:'8px',marginBottom:'16px'}},
+          ...LETTERS.map(letter => 
+            h('button', {
+              key:letter,
+              onClick:() => {
+                vibrate(30);
+                const hand = turn===1 ? p1Hand : p2Hand;
+                const nh = [...hand];
+                nh[jokerIdx] = letter;
+                if(turn===1) setP1Hand(nh);
+                else setP2Hand(nh);
+                setShowJokerModal(false);
+                setJokerIdx(null);
+                setSelectedLetter({letter,idx:jokerIdx,isJoker:true});
+              },
+              className:'btn',
+              style:{
+                aspectRatio:'1',
+                background:'linear-gradient(135deg, #fef3c7, #fde047)',
+                border:'3px solid #f59e0b',
+                fontWeight:'900',
+                fontSize:'16px',
+                padding:'0'
+              }
+            }, letter)
+          )
+        ),
+        h('button', {onClick:() => { vibrate(15); setShowJokerModal(false); setJokerIdx(null); }, className:'btn btn-secondary', style:{width:'100%',padding:'14px'}}, 'İptal')
+      )
+    )
+  );
+}
+
+const root = createRoot(document.getElementById('root'));
+root.render(h(Game));
+    </script>
+</body>
+</html>
