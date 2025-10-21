@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>KeliMania - Türkçe Kelime Oyunu</title>
     
-    <!-- PWA Meta Tags -->
     <meta name="description" content="Türkçe kelime oluşturma ve strateji oyunu. TDK Sözlük destekli.">
     <meta name="theme-color" content="#7c3aed">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -13,13 +12,8 @@
     <meta name="apple-mobile-web-app-title" content="KeliMania">
     <meta name="mobile-web-app-capable" content="yes">
     
-    <!-- PWA Manifest -->
     <link rel="manifest" href="/manifest.json">
-    
-    <!-- Apple Touch Icon -->
     <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='105' fill='%237c3aed'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='280' fill='white' font-family='system-ui, sans-serif' font-weight='bold'%3EKM%3C/text%3E%3C/svg%3E">
-    
-    <!-- Favicon -->
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237c3aed'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='60' fill='white' font-family='system-ui' font-weight='bold'%3EK%3C/text%3E%3C/svg%3E">
     
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
@@ -31,49 +25,157 @@
             -webkit-tap-highlight-color: transparent;
             -webkit-touch-callout: none;
         }
+        
         body { 
             margin: 0; 
             padding: 0; 
-            font-family: system-ui, -apple-system, sans-serif;
+            font-family: 'SF Pro Display', -apple-system, system-ui, sans-serif;
             overflow-x: hidden;
             touch-action: manipulation;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         }
+        
         #root { 
             width: 100%; 
             min-height: 100vh; 
         }
+        
+        /* Board Cells - Enhanced */
         .board-cell {
             aspect-ratio: 1;
-            border: 1px solid #cbd5e0;
+            border: 2px solid #e2e8f0;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
-            font-weight: bold;
+            font-weight: 900;
             user-select: none;
             touch-action: manipulation;
-        }
-        .triple-letter { 
-            background: linear-gradient(135deg, #93c5fd 0%, #60a5fa 100%); 
-            color: white; 
-        }
-        .double-word { 
-            background: linear-gradient(135deg, #f9a8d4 0%, #ec4899 100%); 
-            color: white; 
-        }
-        .center-star { 
-            background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%); 
-            color: #92400e; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 4px;
+            background: white;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.06);
         }
         
-        /* Splash Screen */
+        .board-cell:active {
+            transform: scale(0.95);
+        }
+        
+        .triple-letter { 
+            background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+            color: white;
+            font-weight: 900;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3), inset 0 1px 2px rgba(255,255,255,0.3);
+            border: 2px solid #2563eb;
+        }
+        
+        .double-word { 
+            background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
+            color: white;
+            font-weight: 900;
+            box-shadow: 0 2px 8px rgba(236, 72, 153, 0.3), inset 0 1px 2px rgba(255,255,255,0.3);
+            border: 2px solid #db2777;
+        }
+        
+        .center-star { 
+            background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+            color: white;
+            font-weight: 900;
+            box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4), inset 0 1px 2px rgba(255,255,255,0.3);
+            border: 2px solid #d97706;
+            animation: pulse-star 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse-star {
+            0%, 100% { box-shadow: 0 2px 8px rgba(251, 191, 36, 0.4), inset 0 1px 2px rgba(255,255,255,0.3); }
+            50% { box-shadow: 0 4px 16px rgba(251, 191, 36, 0.6), inset 0 1px 2px rgba(255,255,255,0.5); }
+        }
+        
+        /* Letter Tiles - 3D Effect */
+        .letter-tile {
+            position: relative;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            box-shadow: 
+                0 1px 3px rgba(0,0,0,0.12),
+                0 1px 2px rgba(0,0,0,0.24),
+                inset 0 -2px 0 rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        
+        .letter-tile:not(.disabled):hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 
+                0 8px 16px rgba(0,0,0,0.15),
+                0 4px 6px rgba(0,0,0,0.1),
+                inset 0 -2px 0 rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        
+        .letter-tile:not(.disabled):active {
+            transform: translateY(-1px) scale(1.02);
+            box-shadow: 
+                0 2px 4px rgba(0,0,0,0.15),
+                0 1px 2px rgba(0,0,0,0.1),
+                inset 0 -1px 0 rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        
+        .letter-tile.selected {
+            animation: bounce 0.5s ease-in-out;
+            box-shadow: 
+                0 0 0 3px #10b981,
+                0 8px 16px rgba(16, 185, 129, 0.4),
+                inset 0 -2px 0 rgba(0,0,0,0.1),
+                inset 0 1px 0 rgba(255,255,255,0.6);
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* Score Animation */
+        @keyframes score-pop {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+        
+        .score-pop {
+            animation: score-pop 0.5s ease-in-out;
+        }
+        
+        /* Button Styles - Enhanced */
+        .btn {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            font-weight: 700;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+        
+        .btn:active:not(:disabled) {
+            transform: scale(0.95);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+        
+        .btn-primary:hover:not(:disabled) {
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.5);
+        }
+        
+        /* Splash Screen - Enhanced */
         #splash {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -81,36 +183,98 @@
             z-index: 9999;
             transition: opacity 0.5s;
         }
+        
         #splash.hide {
             opacity: 0;
             pointer-events: none;
         }
+        
         .splash-logo {
             font-size: 120px;
-            font-weight: bold;
-            color: white;
             margin-bottom: 20px;
-            animation: pulse 2s infinite;
-        }
-        .splash-text {
-            font-size: 32px;
-            font-weight: bold;
-            color: white;
-            margin-bottom: 10px;
-        }
-        .splash-subtitle {
-            font-size: 16px;
-            color: rgba(255,255,255,0.8);
-        }
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
+            animation: splash-float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
         }
         
+        @keyframes splash-float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .splash-text {
+            font-size: 48px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            letter-spacing: -1px;
+        }
+        
+        .splash-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.9);
+            font-weight: 600;
+        }
+        
+        /* Message Toast - Enhanced */
+        .message-toast {
+            animation: toast-slide-up 0.3s ease-out;
+        }
+        
+        @keyframes toast-slide-up {
+            from {
+                transform: translateY(100px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        /* Word Preview - Enhanced */
+        .word-preview {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            border-left: 4px solid #10b981;
+        }
+        
+        /* Glow Effect */
+        .glow {
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.6);
+        }
+        
+        /* Responsive Font Sizes */
         @media (max-width: 768px) {
             .board-cell {
-                font-size: 6px;
+                font-size: 7px;
+                border-width: 1px;
             }
+            .splash-logo {
+                font-size: 80px;
+            }
+            .splash-text {
+                font-size: 36px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .board-cell {
+                font-size: 11px;
+            }
+        }
+        
+        /* Pulse Animation for Notifications */
+        @keyframes pulse-glow {
+            0%, 100% { 
+                box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+            }
+            50% { 
+                box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+            }
+        }
+        
+        .pulse-warning {
+            animation: pulse-glow 1.5s ease-in-out infinite;
         }
     </style>
 </head>
@@ -125,16 +289,23 @@
     <div id="root"></div>
     
     <script>
+// Haptic Feedback Helper
+function vibrate(pattern) {
+    if ('vibrate' in navigator) {
+        navigator.vibrate(pattern);
+    }
+}
+
 // Register Service Worker
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
         navigator.serviceWorker.register('/service-worker.js')
-            .then(reg => console.log('✅ Service Worker registered:', reg.scope))
-            .catch(err => console.log('❌ Service Worker registration failed:', err));
+            .then(reg => console.log('✅ Service Worker registered'))
+            .catch(err => console.log('❌ Service Worker failed'));
     });
 }
 
-// Hide splash screen after load
+// Hide splash screen
 window.addEventListener('load', () => {
     setTimeout(() => {
         document.getElementById('splash').classList.add('hide');
@@ -143,7 +314,7 @@ window.addEventListener('load', () => {
 
 // Game code
 const h = React.createElement;
-const { useState } = React;
+const { useState, useEffect } = React;
 const { createRoot } = ReactDOM;
 
 const BOARD_SIZE = 15;
@@ -169,17 +340,9 @@ const COMMON_WORDS = [
   'ACI','SERT','YUMUŞAK','KURU','ISLAK','TEMİZ','KİRLİ','DOLU','BOŞ','AĞIR',
   'HAFİF','YAKIN','UZAK','YENİDEN','ESKİDEN','ŞİMDİ','SONRA','ÖNCE','HER','HİÇ',
   'BİR','İKİ','ÜÇ','DÖRT','BEŞ','ALTI','YEDİ','SEKİZ','DOKUZ','ON',
-  'YÜZ','BİN','MİLYON','BUGÜN','DÜN','YARIN','GÜN','AY','YIL','SAAT','DAKİKA',
-  'SANİYE','HAFTA','İLKBAHAR','YAZ','SONBAHAR','KIŞ','OCAK','ŞUBAT','MART','NİSAN',
-  'MAYIS','HAZİRAN','TEMMUZ','AĞUSTOS','EYLÜL','EKİM','KASIM','ARALIK','PAZARTESİ','SALI',
-  'ÇARŞAMBA','PERŞEMBE','CUMA','CUMARTESİ','PAZAR','SABAH','ÖĞLE','AKŞAM','GECE','YEMEK',
-  'KAHVALTI','İÇMEK','UYUMAK','KALKMAK','GİTMEK','GELMEK','ALMAK','GÖRMEK','BAKMAK',
-  'VERMEK','YAPMAK','ETMEK','OLMAK','BULUNMAK','ÇALIŞMAK','OYNAMAK','OKUMAK','YAZMAK','KONUŞMAK',
-  'DİNLEMEK','İŞİTMEK','DUYMAK','ANLAMAK','DÜŞÜNMEK','BİLMEK','ÖĞRENMEK','UNUTMAK','SEVMEKİ',
-  'HATIRLAMAK','İSTEMEK','KORKMAK','GÜLMEK','AĞLAMAK','ŞAŞIRMAK','DERS','SINIF','TAHTAÇ',
-  'PROJE','PLAN','İŞ','GÖREV','SORUN','ÇÖZÜM','FİKİR','DÜŞÜNCE','AKIL','BİLGİ',
-  'BİLİM','SANAT','MÜZİK','RESİM','HEYKEL','EDEBİYAT','ŞİİR','ROMAN','ÖYKÜ','TİYATRO',
-  'SİNEMA','SPOR','FUTBOL','BASKETBOL','VOLEYBOL','TENİS','YÜZME','KOŞU','ATLAMA','YÜRÜYÜŞ'
+  'YÜZ','BİN','MİLYON','BUGÜN','DÜN','YARIN','GÜN','SAAT','DAKİKA','SANİYE',
+  'HAFTA','İLKBAHAR','YAZ','SONBAHAR','KIŞ','SABAH','ÖĞLE','AKŞAM','GECE','YEMEK',
+  'İÇMEK','UYUMAK','GİTMEK','GELMEK','ALMAK','VERMEK','YAPMAK','GÖRMEK','SEVMEKİ'
 ];
 
 const wordCache = new Map();
@@ -195,7 +358,7 @@ const checkWordWithTDK = async (word) => {
   
   try {
     const apiUrl = 'https://kaleidoscopic-bienenstitch-3cb160.netlify.app/.netlify/functions/check?word=' + encodeURIComponent(normalized);
-    const response = await fetch(apiUrl, { method: 'GET' });
+    const response = await fetch(apiUrl);
     if (!response.ok) {
       wordCache.set(normalized, false);
       return false;
@@ -251,9 +414,18 @@ function Game() {
   const [showWinner, setShowWinner] = useState(false);
   const [winner, setWinner] = useState(null);
   const [passCount, setPassCount] = useState(0);
+  const [scoreAnimation, setScoreAnimation] = useState(false);
   
   const p1Color = '#ef4444';
   const p2Color = '#eab308';
+  
+  // Score animation effect
+  useEffect(() => {
+    if (scoreAnimation) {
+      const timer = setTimeout(() => setScoreAnimation(false), 500);
+      return () => clearTimeout(timer);
+    }
+  }, [scoreAnimation]);
   
   const isValid = (r,c,color) => {
     if(board[r][c]) return false;
@@ -319,6 +491,7 @@ function Game() {
   
   const clickCell = (r,c) => {
     if(swapMode) return;
+    vibrate(10);
     const exist = temp.find(t=>t.r===r&&t.c===c);
     if(exist) { 
       const newTemp = temp.filter(t=>!(t.r===r&&t.c===c));
@@ -330,11 +503,13 @@ function Game() {
     if(board[r][c]) return;
     const color = turn===1?p1Color:p2Color;
     if(!isValid(r,c,color)) { 
+      vibrate([50, 50, 50]);
       setMsg('⚠️ Rakibe çok yakın!'); 
       setTimeout(()=>setMsg(''),2000);
       return;
     }
     if(selectedLetter) {
+      vibrate(20);
       const newTemp = [...temp,{r,c,letter:selectedLetter.letter,idx:selectedLetter.idx,color,isJoker:selectedLetter.isJoker||false}];
       setTemp(newTemp);
       checkWords(newTemp);
@@ -344,6 +519,7 @@ function Game() {
   
   const handleLetterClick = (letter, idx) => {
     if(temp.some(t => t.idx === idx)) return;
+    vibrate(15);
     if(swapMode) {
       const isSelected = selectedSwap.includes(idx);
       if(isSelected) setSelectedSwap(selectedSwap.filter(i => i !== idx));
@@ -363,6 +539,7 @@ function Game() {
   const handlePlay = async () => {
     if(temp.length === 0) return;
     if(wordPreview.invalid.length > 0) {
+      vibrate([100, 50, 100]);
       setMsg('❌ Geçersiz: ' + wordPreview.invalid.join(', '));
       setTimeout(()=>setMsg(''),3000);
       return;
@@ -371,6 +548,10 @@ function Game() {
     const nb = board.map(row => [...row]);
     temp.forEach(t => { nb[t.r][t.c] = {letter:t.letter,color:t.color,isJoker:t.isJoker}; });
     const score = calcScore(temp);
+    
+    vibrate([50, 30, 50, 30, 50]);
+    setScoreAnimation(true);
+    
     if(turn === 1) {
       setP1Score(p1Score + score);
       const ui = temp.map(t => t.idx);
@@ -389,30 +570,33 @@ function Game() {
     setBoard(nb);
     setTemp([]);
     setWordPreview({valid:[],invalid:[]});
-    setMsg('✅ +' + score + ' puan!');
-    setTimeout(()=>setMsg(''),2000);
+    setMsg('🎉 +' + score + ' puan!');
+    setTimeout(()=>setMsg(''),3000);
     setTurn(turn===1?2:1);
     setPassCount(0);
     setChecking(false);
   };
   
   const handlePass = () => {
+    vibrate(30);
     const npc = passCount + 1;
     setPassCount(npc);
     if(npc >= 3) {
       setWinner(turn===1?2:1);
       setShowWinner(true);
+      vibrate([100, 50, 100, 50, 100]);
       return;
     }
     setTemp([]);
     setWordPreview({valid:[],invalid:[]});
     setSelectedLetter(null);
     setTurn(turn===1?2:1);
-    setMsg('⏭️ Pas');
+    setMsg('⏭️ Pas geçildi');
     setTimeout(()=>setMsg(''),2000);
   };
   
   const handleShuffle = () => {
+    vibrate(25);
     if(turn===1) setP1Hand([...p1Hand].sort(()=>Math.random()-0.5));
     else setP2Hand([...p2Hand].sort(()=>Math.random()-0.5));
   };
@@ -420,10 +604,12 @@ function Game() {
   const handleSwap = () => {
     if(selectedSwap.length===0) return;
     if(bag.length < selectedSwap.length) {
+      vibrate([50, 50, 50]);
       setMsg('⚠️ Çanta yetersiz');
       setTimeout(()=>setMsg(''),2000);
       return;
     }
+    vibrate(40);
     const hand = turn===1 ? p1Hand : p2Hand;
     const nh = hand.filter((_,i) => !selectedSwap.includes(i));
     const dr = bag.slice(0, selectedSwap.length);
@@ -434,17 +620,19 @@ function Game() {
     setSwapMode(false);
     setSelectedSwap([]);
     setTurn(turn===1?2:1);
-    setMsg('🔄 Değiştirildi');
+    setMsg('🔄 Harfler değiştirildi');
     setTimeout(()=>setMsg(''),2000);
   };
   
   const handleUndo = () => {
+    vibrate(15);
     setTemp([]);
     setWordPreview({valid:[],invalid:[]});
     setSelectedLetter(null);
   };
   
   const handleReset = () => {
+    vibrate(50);
     const nb = initBag();
     setBag(nb);
     setP1Hand(ensureVowels(nb.slice(0,7)));
@@ -463,6 +651,7 @@ function Game() {
   };
   
   const handleForfeit = () => {
+    vibrate(100);
     setWinner(turn===1?2:1);
     setShowWinner(true);
   };
@@ -470,45 +659,72 @@ function Game() {
   const currentHand = turn===1 ? p1Hand : p2Hand;
   const tempScore = calcScore(temp);
   
-  return h('div', {className:'min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-600 p-1 sm:p-2'},
+  return h('div', {className:'min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-cyan-600 p-2 sm:p-3'},
     h('div', {className:'max-w-7xl mx-auto'},
-      h('div', {className:'bg-white/10 backdrop-blur rounded-lg p-2 mb-2'},
-        h('div', {className:'flex justify-between items-center gap-2'},
-          h('div', {className:'flex-1 flex items-center justify-between px-2 py-1 rounded-lg ' + (turn===1?'bg-red-500':'bg-red-400/50') + ' text-white text-xs sm:text-sm'},
-            h('div', {className:'flex items-center gap-1'},
-              h('div', {className:'w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full flex items-center justify-center text-red-500 font-bold text-[10px] sm:text-xs'}, '1'),
-              h('span', {className:'font-bold'}, 'P1: ' + p1Score)
-            )
+      // Score Header - Enhanced
+      h('div', {className:'bg-white/95 backdrop-blur-xl rounded-2xl p-3 mb-3 shadow-2xl border-2 border-white/50'},
+        h('div', {className:'flex justify-between items-center gap-3'},
+          h('div', {
+            className:'flex-1 flex items-center justify-between px-4 py-3 rounded-xl ' + 
+              (turn===1?'bg-gradient-to-r from-red-500 to-red-600':'bg-red-400/50') + 
+              ' text-white text-sm sm:text-base shadow-lg transition-all duration-300' +
+              (scoreAnimation && turn===1 ? ' score-pop' : '')
+          },
+            h('div', {className:'flex items-center gap-2'},
+              h('div', {className:'w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center text-red-500 font-black text-sm sm:text-base shadow-md'}, '1'),
+              h('span', {className:'font-black tracking-tight'}, 'Oyuncu 1')
+            ),
+            h('span', {className:'font-black text-lg sm:text-xl'}, p1Score)
           ),
-          h('div', {className:'flex-1 flex items-center justify-between px-2 py-1 rounded-lg ' + (turn===2?'bg-yellow-500':'bg-yellow-400/50') + ' text-white text-xs sm:text-sm'},
-            h('div', {className:'flex items-center gap-1'},
-              h('div', {className:'w-4 h-4 sm:w-5 sm:h-5 bg-white rounded-full flex items-center justify-center text-yellow-600 font-bold text-[10px] sm:text-xs'}, '2'),
-              h('span', {className:'font-bold'}, 'P2: ' + p2Score)
-            )
+          h('div', {
+            className:'flex-1 flex items-center justify-between px-4 py-3 rounded-xl ' + 
+              (turn===2?'bg-gradient-to-r from-yellow-500 to-yellow-600':'bg-yellow-400/50') + 
+              ' text-white text-sm sm:text-base shadow-lg transition-all duration-300' +
+              (scoreAnimation && turn===2 ? ' score-pop' : '')
+          },
+            h('div', {className:'flex items-center gap-2'},
+              h('div', {className:'w-6 h-6 sm:w-8 sm:h-8 bg-white rounded-full flex items-center justify-center text-yellow-600 font-black text-sm sm:text-base shadow-md'}, '2'),
+              h('span', {className:'font-black tracking-tight'}, 'Oyuncu 2')
+            ),
+            h('span', {className:'font-black text-lg sm:text-xl'}, p2Score)
           )
         ),
-        h('div', {className:'text-white text-center mt-1 text-[10px] sm:text-xs opacity-80'}, 'Çanta: ' + bag.length)
-      ),
-      msg && h('div', {className:'text-center mb-2'},
-        h('div', {className:'inline-block bg-white px-3 py-1 rounded-lg shadow-lg font-bold text-xs sm:text-sm'}, msg)
-      ),
-      showWinner && h('div', {className:'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'},
-        h('div', {className:'bg-white p-6 rounded-2xl shadow-2xl text-center max-w-sm w-full'},
-          h('div', {className:'text-5xl mb-3'}, '🏆'),
-          h('h2', {className:'text-2xl font-bold mb-3'}, 'Oyuncu ' + winner + ' Kazandı!'),
-          h('p', {className:'text-lg mb-1'}, 'Oyuncu 1: ' + p1Score + ' puan'),
-          h('p', {className:'text-lg mb-4'}, 'Oyuncu 2: ' + p2Score + ' puan'),
-          h('button', {onClick:handleReset, className:'bg-green-600 text-white px-6 py-2 rounded-lg font-bold hover:bg-green-700 text-lg'}, 'Yeni Oyun')
+        h('div', {className:'text-gray-700 text-center mt-2 text-xs sm:text-sm font-semibold flex items-center justify-center gap-2'},
+          h('span', {className:'bg-purple-100 px-3 py-1 rounded-full'}, '🎒 Çanta: ' + bag.length),
+          passCount > 0 && h('span', {className:'bg-red-100 px-3 py-1 rounded-full pulse-warning'}, '⚠️ Pas: ' + passCount + '/3')
         )
       ),
-      h('div', {className:'flex flex-col lg:flex-row gap-2 justify-center items-start'},
-        h('div', {className:'bg-white p-1 sm:p-2 rounded-xl shadow-2xl w-full max-w-full'},
+      
+      // Message Toast - Enhanced
+      msg && h('div', {className:'text-center mb-3 message-toast'},
+        h('div', {className:'inline-block bg-white px-6 py-3 rounded-xl shadow-2xl font-bold text-sm sm:text-base border-2 border-purple-200'}, msg)
+      ),
+      
+      // Winner Modal - Enhanced
+      showWinner && h('div', {className:'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'},
+        h('div', {className:'bg-white p-8 rounded-3xl shadow-2xl text-center max-w-sm w-full border-4 border-yellow-400'},
+          h('div', {className:'text-7xl mb-4 animate-bounce'}, '🏆'),
+          h('h2', {className:'text-3xl font-black mb-4 bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'}, 'Oyuncu ' + winner + ' Kazandı!'),
+          h('div', {className:'bg-gradient-to-r from-purple-50 to-blue-50 rounded-2xl p-4 mb-6'},
+            h('p', {className:'text-xl font-bold mb-2 text-red-600'}, 'Oyuncu 1: ' + p1Score + ' puan'),
+            h('p', {className:'text-xl font-bold text-yellow-600'}, 'Oyuncu 2: ' + p2Score + ' puan')
+          ),
+          h('button', {
+            onClick:handleReset, 
+            className:'bg-gradient-to-r from-green-500 to-green-600 text-white px-8 py-4 rounded-xl font-black hover:shadow-2xl text-xl btn transition-all duration-300 w-full'
+          }, '🔄 Yeni Oyun')
+        )
+      ),
+      
+      h('div', {className:'flex flex-col lg:flex-row gap-3 justify-center items-start'},
+        // Board - Enhanced
+        h('div', {className:'bg-white p-2 sm:p-3 rounded-2xl shadow-2xl border-4 border-white/50'},
           h('div', {
-            className:'grid gap-[1px] sm:gap-0',
+            className:'grid gap-[2px] sm:gap-1',
             style:{
               gridTemplateColumns:'repeat('+BOARD_SIZE+', 1fr)',
               width:'100%',
-              maxWidth:'100vw',
+              maxWidth:'min(95vw, 700px)',
               aspectRatio:'1'
             }
           },
@@ -519,27 +735,35 @@ function Game() {
                 const isTL = TRIPLE_LETTER.some(([x,y]) => x===r&&y===c);
                 const isDW = DOUBLE_WORD.some(([x,y]) => x===r&&y===c);
                 const isCS = r===7 && c===7;
-                let cc = 'board-cell text-[8px] sm:text-xs';
-                if(tile||tempTile) cc += ' font-bold';
+                let cc = 'board-cell';
+                if(tile||tempTile) cc += ' font-black';
                 else if(isTL) cc += ' triple-letter';
                 else if(isDW) cc += ' double-word';
                 else if(isCS) cc += ' center-star';
-                else cc += ' bg-yellow-50';
                 const dt = tempTile||tile;
                 return h('div', {
                   key:r+'-'+c,
                   className:cc,
                   onClick:()=>clickCell(r,c),
-                  style:dt ? {backgroundColor:dt.color,color:'white',cursor:'pointer'} : {cursor:'pointer'}
+                  style:dt ? {
+                    backgroundColor:dt.color,
+                    color:'white',
+                    cursor:'pointer',
+                    boxShadow:'0 4px 8px rgba(0,0,0,0.2), inset 0 -2px 0 rgba(0,0,0,0.2)'
+                  } : {cursor:'pointer'}
                 }, dt ? dt.letter+(dt.isJoker?'★':'') : isTL?'3×H':isDW?'2×K':isCS?'★':'');
               })
             ).flat()
           )
         ),
-        h('div', {className:'bg-white p-2 sm:p-3 rounded-xl shadow-2xl w-full lg:w-64'},
-          h('div', {className:'mb-2'},
-            h('h3', {className:'font-bold mb-2 text-xs sm:text-sm'}, 'Oyuncu ' + turn + ' - El'),
-            h('div', {className:'flex gap-1 flex-wrap justify-center'},
+        
+        // Control Panel - Enhanced
+        h('div', {className:'bg-white/95 backdrop-blur-xl p-3 sm:p-4 rounded-2xl shadow-2xl w-full lg:w-72 border-2 border-white/50'},
+          h('div', {className:'mb-3'},
+            h('h3', {className:'font-black mb-3 text-sm sm:text-base bg-gradient-to-r from-purple-600 to-blue-600 bg-clip-text text-transparent'}, 
+              '🎮 Oyuncu ' + turn + ' - Harfler'
+            ),
+            h('div', {className:'flex gap-1.5 flex-wrap justify-center'},
               ...currentHand.map((letter,idx) => {
                 const isUsed = temp.some(t => t.idx===idx);
                 const isSelected = selectedSwap.includes(idx);
@@ -547,54 +771,63 @@ function Game() {
                 return h('div', {
                   key:idx,
                   onClick:() => handleLetterClick(letter, idx),
-                  className:'w-9 h-9 sm:w-11 sm:h-11 flex flex-col items-center justify-center border-2 rounded font-bold text-xs sm:text-sm relative ' + 
-                    (isUsed ? 'opacity-30 cursor-not-allowed border-gray-300' :
-                     isActive ? 'border-green-500 bg-green-100 ring-2 ring-green-500' :
-                     isSelected ? 'border-blue-500 bg-blue-100' :
-                     'border-amber-600 bg-gradient-to-br from-yellow-100 to-amber-200 cursor-pointer hover:scale-110 active:scale-95'),
-                  style:{transition:'all 0.2s'}
+                  className:'letter-tile w-10 h-10 sm:w-12 sm:h-12 flex flex-col items-center justify-center border-3 rounded-lg font-black text-sm sm:text-base relative ' + 
+                    (isUsed ? 'opacity-30 cursor-not-allowed border-gray-300 disabled' :
+                     isActive ? 'border-green-500 bg-green-50 selected glow' :
+                     isSelected ? 'border-blue-500 bg-blue-50' :
+                     'border-amber-500 bg-gradient-to-br from-yellow-50 to-amber-100 cursor-pointer'),
+                  style:{borderWidth:'3px'}
                 },
-                  letter==='*' ? '★' : letter,
-                  !isUsed && letter!=='*' && h('span', {className:'absolute bottom-0 right-0.5 text-[8px] text-gray-600'}, POINTS[letter]||0)
+                  letter==='*' ? '⭐' : letter,
+                  !isUsed && letter!=='*' && h('span', {className:'absolute bottom-0.5 right-1 text-[9px] font-bold text-gray-500 bg-white/80 px-1 rounded'}, POINTS[letter]||0)
                 );
               })
             )
           ),
-          (wordPreview.valid.length>0 || wordPreview.invalid.length>0) && h('div', {className:'mb-2 p-2 bg-gray-50 rounded text-[10px] sm:text-xs'},
-            wordPreview.valid.length>0 && h('div', {className:'text-green-600 font-bold'}, '✅ ' + wordPreview.valid.join(', ')),
-            wordPreview.invalid.length>0 && h('div', {className:'text-red-600 font-bold'}, '❌ ' + wordPreview.invalid.join(', ')),
-            temp.length>0 && h('div', {className:'text-blue-600 font-bold mt-1'}, '+' + tempScore + ' puan')
+          
+          // Word Preview - Enhanced
+          (wordPreview.valid.length>0 || wordPreview.invalid.length>0) && h('div', {className:'mb-3 p-3 word-preview rounded-xl text-xs sm:text-sm shadow-inner'},
+            wordPreview.valid.length>0 && h('div', {className:'text-green-600 font-bold mb-1'}, '✅ ' + wordPreview.valid.join(', ')),
+            wordPreview.invalid.length>0 && h('div', {className:'text-red-600 font-bold mb-1'}, '❌ ' + wordPreview.invalid.join(', ')),
+            temp.length>0 && h('div', {className:'text-blue-600 font-black text-base'}, '🎯 +' + tempScore + ' puan')
           ),
-          h('div', {className:'space-y-1'},
+          
+          // Buttons - Enhanced
+          h('div', {className:'space-y-2'},
             temp.length>0 && h('button', {
               onClick:handlePlay,
               disabled:checking||wordPreview.invalid.length>0,
-              className:'w-full bg-green-600 text-white p-2 rounded flex items-center justify-center hover:bg-green-700 disabled:opacity-50 shadow-lg active:scale-95 font-bold text-sm'
-            }, checking ? '⏳ Kontrol...' : '▶️ Oyna'),
-            h('div', {className:'grid grid-cols-2 gap-1'},
-              h('button', {onClick:handleUndo, disabled:temp.length===0, className:'bg-orange-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-orange-600 disabled:opacity-50 shadow-sm active:scale-95 text-[10px] sm:text-xs'}, '↶ Geri'),
-              h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'bg-gray-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-gray-600 shadow-sm active:scale-95 text-[10px] sm:text-xs'}, '🔀 Karıştır'),
+              className:'btn btn-primary w-full text-white p-3 rounded-xl flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed font-black text-sm sm:text-base'
+            }, checking ? '⏳ Kontrol ediliyor...' : '▶️ OYNA'),
+            
+            h('div', {className:'grid grid-cols-2 gap-2'},
+              h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn bg-gradient-to-r from-orange-500 to-orange-600 text-white p-2 rounded-lg flex items-center justify-center hover:from-orange-600 hover:to-orange-700 disabled:opacity-50 font-bold text-xs sm:text-sm'}, '↶ Geri'),
+              h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn bg-gradient-to-r from-gray-500 to-gray-600 text-white p-2 rounded-lg flex items-center justify-center hover:from-gray-600 hover:to-gray-700 font-bold text-xs sm:text-sm'}, '🔀 Karıştır'),
               swapMode ?
-                h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'bg-blue-600 text-white p-1.5 rounded flex items-center justify-center hover:bg-blue-700 disabled:opacity-50 shadow-sm active:scale-95 text-[10px] sm:text-xs'}, '✓ Değiştir ('+selectedSwap.length+')') :
-                h('button', {onClick:()=>setSwapMode(true), disabled:temp.length>0, className:'bg-blue-500 text-white p-1.5 rounded flex items-center justify-center hover:bg-blue-600 disabled:opacity-50 shadow-sm active:scale-95 text-[10px] sm:text-xs'}, '🔄 Değiştir'),
-              h('button', {onClick:handlePass, className:'bg-gray-600 text-white p-1.5 rounded flex items-center justify-center hover:bg-gray-700 shadow-sm active:scale-95 text-[10px] sm:text-xs'}, '⏭️ Pas' + (passCount>0 ? ' ⚠️' : ''))
+                h('button', {onClick:handleSwap, disabled:selectedSwap.length===0, className:'btn bg-gradient-to-r from-blue-600 to-blue-700 text-white p-2 rounded-lg flex items-center justify-center hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-bold text-xs sm:text-sm'}, '✓ Değiştir ('+selectedSwap.length+')') :
+                h('button', {onClick:()=>{vibrate(20);setSwapMode(true);}, disabled:temp.length>0, className:'btn bg-gradient-to-r from-blue-500 to-blue-600 text-white p-2 rounded-lg flex items-center justify-center hover:from-blue-600 hover:to-blue-700 disabled:opacity-50 font-bold text-xs sm:text-sm'}, '🔄 Değiştir'),
+              h('button', {onClick:handlePass, className:'btn bg-gradient-to-r from-gray-600 to-gray-700 text-white p-2 rounded-lg flex items-center justify-center hover:from-gray-700 hover:to-gray-800 font-bold text-xs sm:text-sm' + (passCount>0?' pulse-warning':'')}, '⏭️ Pas' + (passCount>0 ? ' ('+passCount+'/3)' : ''))
             ),
-            h('div', {className:'grid grid-cols-2 gap-1'},
-              h('button', {onClick:handleReset, className:'bg-red-500 text-white p-1.5 rounded flex flex-col items-center justify-center hover:bg-red-600 shadow-sm active:scale-95 text-[10px] sm:text-xs'}, '🔄', h('span', {className:'text-[8px]'}, 'Yenile')),
-              h('button', {onClick:handleForfeit, className:'bg-blue-500 text-white p-1.5 rounded flex flex-col items-center justify-center hover:bg-blue-600 shadow-sm active:scale-95 text-[10px] sm:text-xs'}, '🏳️', h('span', {className:'text-[8px]'}, 'Pes Et'))
+            
+            h('div', {className:'grid grid-cols-2 gap-2 pt-2 border-t-2 border-gray-200'},
+              h('button', {onClick:handleReset, className:'btn bg-gradient-to-r from-red-500 to-red-600 text-white p-2 rounded-lg flex flex-col items-center justify-center hover:from-red-600 hover:to-red-700 font-bold text-xs sm:text-sm'}, '🔄', h('span', {className:'text-[9px] mt-0.5'}, 'Yenile')),
+              h('button', {onClick:handleForfeit, className:'btn bg-gradient-to-r from-purple-500 to-purple-600 text-white p-2 rounded-lg flex flex-col items-center justify-center hover:from-purple-600 hover:to-purple-700 font-bold text-xs sm:text-sm'}, '🏳️', h('span', {className:'text-[9px] mt-0.5'}, 'Pes Et'))
             )
           )
         )
       )
     ),
-    showJokerModal && h('div', {className:'fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'},
-      h('div', {className:'bg-white p-4 sm:p-6 rounded-2xl shadow-2xl max-w-md w-full'},
-        h('h3', {className:'text-lg sm:text-xl font-bold mb-3 text-center'}, 'Joker Harfi Seç'),
-        h('div', {className:'grid grid-cols-7 gap-1 sm:gap-2 mb-3'},
+    
+    // Joker Modal - Enhanced
+    showJokerModal && h('div', {className:'fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4'},
+      h('div', {className:'bg-white p-5 sm:p-7 rounded-3xl shadow-2xl max-w-md w-full border-4 border-yellow-400'},
+        h('h3', {className:'text-xl sm:text-2xl font-black mb-4 text-center bg-gradient-to-r from-yellow-500 to-orange-500 bg-clip-text text-transparent'}, '⭐ Joker Harfi Seç'),
+        h('div', {className:'grid grid-cols-7 gap-1.5 sm:gap-2 mb-4'},
           ...LETTERS.map(letter => 
             h('button', {
               key:letter,
               onClick:() => {
+                vibrate(30);
                 const hand = turn===1 ? p1Hand : p2Hand;
                 const nh = [...hand];
                 nh[jokerIdx] = letter;
@@ -606,13 +839,13 @@ function Game() {
                 setMsg('📍 Tahtada bir kareye tıkla');
                 setTimeout(() => setMsg(''), 3000);
               },
-              className:'aspect-square bg-gradient-to-br from-yellow-100 to-amber-200 border-2 border-amber-600 rounded font-bold text-xs sm:text-sm hover:scale-105 active:scale-95'
+              className:'btn aspect-square bg-gradient-to-br from-yellow-100 to-amber-200 border-3 border-amber-500 rounded-lg font-black text-xs sm:text-sm hover:shadow-lg'
             }, letter)
           )
         ),
         h('button', {
-          onClick:() => { setShowJokerModal(false); setJokerIdx(null); },
-          className:'w-full bg-gray-500 text-white py-2 rounded font-bold hover:bg-gray-600'
+          onClick:() => { vibrate(15); setShowJokerModal(false); setJokerIdx(null); },
+          className:'btn w-full bg-gradient-to-r from-gray-500 to-gray-600 text-white py-3 rounded-xl font-black hover:from-gray-600 hover:to-gray-700'
         }, 'İptal')
       )
     )
