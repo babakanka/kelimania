@@ -38,25 +38,25 @@
             flex-direction: column;
         }
         
-        /* Score Bar - Super Compact */
+        /* Score Bar - Compact */
         .score-bar {
             display: flex;
-            gap: 4px;
-            padding: 8px;
+            gap: 6px;
+            padding: 6px;
             background: transparent;
         }
         
         .score-item {
             flex: 1;
-            padding: 8px 12px;
-            border-radius: 12px;
+            padding: 10px 14px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-size: 14px;
-            font-weight: 800;
+            font-size: 15px;
+            font-weight: 900;
             color: white;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
         }
         
         .score-item.p1 {
@@ -68,133 +68,143 @@
         }
         
         .score-item.active {
-            box-shadow: 0 0 0 3px rgba(255,255,255,0.5), 0 4px 12px rgba(0,0,0,0.2);
+            box-shadow: 0 0 0 3px rgba(255,255,255,0.6), 0 4px 16px rgba(0,0,0,0.3);
+            transform: scale(1.02);
         }
         
         .bag-info {
-            padding: 8px 12px;
-            border-radius: 12px;
-            background: rgba(255,255,255,0.25);
+            padding: 10px 14px;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.3);
             backdrop-filter: blur(10px);
-            font-size: 12px;
-            font-weight: 800;
+            font-size: 13px;
+            font-weight: 900;
             color: white;
             display: flex;
             align-items: center;
             gap: 4px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            min-width: 70px;
+            justify-content: center;
         }
         
-        /* Board - FILL ALL SPACE */
+        /* Board - VERTICAL RECTANGLE 12×18 */
         .board-container {
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 8px;
+            padding: 6px 8px;
             position: relative;
+            overflow: hidden;
         }
         
         .board-grid {
             display: grid;
-            gap: 1px;
-            width: 100%;
-            height: 100%;
-            max-width: min(100vw - 16px, 100vh - 280px);
-            max-height: min(100vw - 16px, 100vh - 280px);
+            gap: 2px;
             background: white;
-            padding: 3px;
+            padding: 4px;
             border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.25);
         }
         
         .board-cell {
             aspect-ratio: 1;
-            border: 1px solid #e5e7eb;
+            border: 1.5px solid #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 900;
             user-select: none;
             touch-action: manipulation;
-            transition: transform 0.1s;
-            border-radius: 3px;
+            transition: all 0.15s;
+            border-radius: 4px;
             background: #fefefe;
-            font-size: clamp(7px, 2vw, 11px);
+            font-size: clamp(9px, 2.5vw, 13px);
             cursor: pointer;
         }
         
         .board-cell:active {
-            transform: scale(0.95);
+            transform: scale(0.92);
         }
         
         .board-cell.drag-over {
             background: #e0e7ff !important;
-            border: 2px solid #6366f1;
+            border: 2px solid #6366f1 !important;
+            transform: scale(1.05);
         }
         
         .triple-letter { 
             background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
             color: white;
             border-color: #2563eb;
+            font-weight: 900;
         }
         
         .double-word { 
             background: linear-gradient(135deg, #f472b6 0%, #ec4899 100%);
             color: white;
             border-color: #db2777;
+            font-weight: 900;
         }
         
         .center-star { 
             background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
             color: white;
             border-color: #d97706;
+            font-weight: 900;
+            box-shadow: 0 0 10px rgba(251, 191, 36, 0.5);
         }
         
         /* Word Preview Tooltip */
         .word-tooltip {
             position: absolute;
-            top: 80px;
+            top: 70px;
             left: 50%;
             transform: translateX(-50%);
             background: white;
-            padding: 12px 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+            padding: 14px 24px;
+            border-radius: 14px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
             z-index: 100;
-            animation: tooltip-pop 0.2s;
+            animation: tooltip-pop 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
             border: 3px solid #10b981;
+            max-width: 90%;
         }
         
         @keyframes tooltip-pop {
-            0% { transform: translateX(-50%) scale(0.8); opacity: 0; }
-            100% { transform: translateX(-50%) scale(1); opacity: 1; }
+            0% { transform: translateX(-50%) scale(0.8) translateY(10px); opacity: 0; }
+            100% { transform: translateX(-50%) scale(1) translateY(0); opacity: 1; }
         }
         
         /* Hand Container */
         .hand-container {
             display: flex;
-            gap: 6px;
+            gap: 7px;
             justify-content: center;
             padding: 8px;
             background: white;
+            overflow-x: auto;
+            overflow-y: hidden;
+            -webkit-overflow-scrolling: touch;
         }
         
         .letter-tile {
-            width: 52px;
-            height: 52px;
+            min-width: 54px;
+            width: 54px;
+            height: 54px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border-radius: 10px;
+            border-radius: 11px;
             font-weight: 900;
-            font-size: 20px;
-            transition: all 0.2s;
+            font-size: 22px;
+            transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
             box-shadow: 
-                0 2px 6px rgba(0,0,0,0.15),
-                inset 0 -2px 0 rgba(0,0,0,0.1),
-                inset 0 1px 0 rgba(255,255,255,0.5);
+                0 3px 8px rgba(0,0,0,0.18),
+                inset 0 -2px 0 rgba(0,0,0,0.15),
+                inset 0 1px 0 rgba(255,255,255,0.6);
             touch-action: none;
             cursor: grab;
             position: relative;
@@ -202,23 +212,26 @@
         
         .letter-tile:active {
             cursor: grabbing;
+            transform: scale(0.95);
         }
         
         .letter-tile.dragging {
-            opacity: 0.5;
+            opacity: 0.4;
             cursor: grabbing;
+            transform: scale(1.1) rotate(5deg);
         }
         
         .letter-tile.selected {
             box-shadow: 
-                0 0 0 3px #10b981,
-                0 4px 12px rgba(16, 185, 129, 0.5);
-            transform: translateY(-4px);
+                0 0 0 4px #10b981,
+                0 6px 16px rgba(16, 185, 129, 0.6);
+            transform: translateY(-6px) scale(1.05);
         }
         
         .letter-tile.disabled {
-            opacity: 0.3;
+            opacity: 0.25;
             cursor: not-allowed;
+            transform: scale(0.95);
         }
         
         /* Control Buttons */
@@ -227,17 +240,17 @@
             background: white;
             display: flex;
             flex-direction: column;
-            gap: 6px;
+            gap: 7px;
         }
         
         .btn {
-            padding: 10px;
-            border-radius: 10px;
+            padding: 11px;
+            border-radius: 11px;
             border: none;
-            font-weight: 800;
-            font-size: 13px;
+            font-weight: 900;
+            font-size: 14px;
             transition: all 0.2s;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+            box-shadow: 0 3px 8px rgba(0,0,0,0.18);
             touch-action: manipulation;
             display: flex;
             align-items: center;
@@ -247,12 +260,14 @@
         }
         
         .btn:active:not(:disabled) {
-            transform: scale(0.95);
+            transform: scale(0.94);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         
         .btn-primary {
             background: linear-gradient(135deg, #10b981, #059669);
             color: white;
+            font-size: 15px;
         }
         
         .btn-secondary {
@@ -261,7 +276,7 @@
         }
         
         .btn:disabled {
-            opacity: 0.4;
+            opacity: 0.35;
             cursor: not-allowed;
         }
         
@@ -272,13 +287,13 @@
             left: 50%;
             transform: translate(-50%, -50%);
             background: white;
-            padding: 16px 32px;
-            border-radius: 16px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
-            font-weight: 800;
-            font-size: 16px;
+            padding: 18px 36px;
+            border-radius: 18px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.35);
+            font-weight: 900;
+            font-size: 17px;
             z-index: 200;
-            animation: toast-pop 0.3s;
+            animation: toast-pop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         
         /* Splash */
@@ -300,21 +315,23 @@
         }
         
         .splash-logo {
-            font-size: 80px;
+            font-size: 90px;
             animation: float 3s ease-in-out infinite;
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
         }
         
         @keyframes float {
             0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-20px); }
+            50% { transform: translateY(-25px); }
         }
         
         .splash-text {
-            font-size: 40px;
+            font-size: 44px;
             font-weight: 900;
             color: white;
-            text-shadow: 0 4px 8px rgba(0,0,0,0.3);
-            margin-top: 16px;
+            text-shadow: 0 4px 12px rgba(0,0,0,0.4);
+            margin-top: 20px;
+            letter-spacing: -1px;
         }
     </style>
 </head>
@@ -340,12 +357,17 @@ window.addEventListener('load', () => {
 });
 
 const h = React.createElement;
-const { useState, useRef } = React;
+const { useState } = React;
 const { createRoot } = ReactDOM;
 
-const BOARD_SIZE = 15;
-const TRIPLE_LETTER = [[3,3],[3,11],[11,3],[11,11]];
-const DOUBLE_WORD = [[7,3],[7,11],[3,7],[11,7]];
+// NEW: 12 columns × 18 rows
+const COLS = 12;
+const ROWS = 18;
+
+// Bonus squares repositioned for 12×18
+const TRIPLE_LETTER = [[2,2],[2,9],[9,2],[9,9],[5,5],[5,12],[11,5],[11,12]];
+const DOUBLE_WORD = [[5,2],[5,9],[11,2],[11,9],[3,6],[3,11],[13,6],[13,11]];
+const CENTER = [9, 6]; // Center star
 
 const POINTS = {
   A:1,B:5,C:6,Ç:6,D:4,E:1,F:8,G:5,Ğ:8,H:6,I:5,İ:5,J:10,K:3,L:3,M:4,
@@ -358,7 +380,8 @@ const COMMON_WORDS = [
   'MASA','KAPI','EV','AĞAÇ','ARABA','KITAP','KALEM','DEFTER','OKUL','ÖĞRENCİ',
   'ÖĞRETMEN','ANNE','BABA','KARDEŞ','ARKADAŞ','OYUN','TOP','BAL','SU','YER',
   'GÖK','GÜNEŞ','AY','YILDIZ','DENIZ','DAĞ','ORMAN','ÇİÇEK','BAHÇE','PARK',
-  'HAYVAN','KEDİ','KÖPEK','KUŞ','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ'
+  'HAYVAN','KEDİ','KÖPEK','KUŞ','BALIK','AT','İNEK','KOYUN','TAVUK','HOROZ',
+  'ELBİSE','AYAKKABI','ŞAPKA','PANTOLON','GÖMLEK','CEKET','İÇ','DIŞ','ÜST','ALT'
 ];
 
 const wordCache = new Map();
@@ -407,7 +430,7 @@ function Game() {
   const [bag, setBag] = useState(initBag);
   const [p1Hand, setP1Hand] = useState(() => ensureVowels(bag.slice(0,7)));
   const [p2Hand, setP2Hand] = useState(() => ensureVowels(bag.slice(7,14)));
-  const [board, setBoard] = useState(() => Array(BOARD_SIZE).fill(null).map(() => Array(BOARD_SIZE).fill(null)));
+  const [board, setBoard] = useState(() => Array(ROWS).fill(null).map(() => Array(COLS).fill(null)));
   const [temp, setTemp] = useState([]);
   const [turn, setTurn] = useState(1);
   const [p1Score, setP1Score] = useState(0);
@@ -434,7 +457,7 @@ function Game() {
     if(temp.find(t=>t.r===r&&t.c===c)) return false;
     const dn = [[r-1,c],[r+1,c],[r,c-1],[r,c+1]];
     for(const [nr,nc] of dn) {
-      if(nr<0||nr>=BOARD_SIZE||nc<0||nc>=BOARD_SIZE) continue;
+      if(nr<0||nr>=ROWS||nc<0||nc>=COLS) continue;
       const n = board[nr][nc];
       if(n && n.color!==color) return false;
       const nt = temp.find(t=>t.r===nr&&t.c===nc);
@@ -448,22 +471,27 @@ function Game() {
     const tb = board.map(row => [...row]);
     tempTiles.forEach(t => { tb[t.r][t.c] = {letter:t.letter,isNew:true}; });
     const words = [];
-    for(let r=0; r<BOARD_SIZE; r++) {
+    
+    // Horizontal
+    for(let r=0; r<ROWS; r++) {
       let w='',hn=false;
-      for(let c=0; c<BOARD_SIZE; c++) {
+      for(let c=0; c<COLS; c++) {
         if(tb[r][c]) { w+=tb[r][c].letter; if(tb[r][c].isNew) hn=true; }
         else { if(w.length>=2&&hn) words.push(w); w=''; hn=false; }
       }
       if(w.length>=2&&hn) words.push(w);
     }
-    for(let c=0; c<BOARD_SIZE; c++) {
+    
+    // Vertical
+    for(let c=0; c<COLS; c++) {
       let w='',hn=false;
-      for(let r=0; r<BOARD_SIZE; r++) {
+      for(let r=0; r<ROWS; r++) {
         if(tb[r][c]) { w+=tb[r][c].letter; if(tb[r][c].isNew) hn=true; }
         else { if(w.length>=2&&hn) words.push(w); w=''; hn=false; }
       }
       if(w.length>=2&&hn) words.push(w);
     }
+    
     if(words.length===0 && tempTiles.length>0) {
       words.push(tempTiles.map(t=>t.letter).join(''));
     }
@@ -693,7 +721,7 @@ function Game() {
     setBag(nb);
     setP1Hand(ensureVowels(nb.slice(0,7)));
     setP2Hand(ensureVowels(nb.slice(7,14)));
-    setBoard(Array(BOARD_SIZE).fill(null).map(()=>Array(BOARD_SIZE).fill(null)));
+    setBoard(Array(ROWS).fill(null).map(()=>Array(COLS).fill(null)));
     setTemp([]);
     setTurn(1);
     setP1Score(0);
@@ -715,6 +743,13 @@ function Game() {
   const currentHand = turn===1 ? p1Hand : p2Hand;
   const tempScore = calcScore(temp);
   
+  // Calculate board size
+  const maxWidth = window.innerWidth - 16;
+  const maxHeight = window.innerHeight - 240; // Leave space for score, hand, buttons
+  const cellSize = Math.min(maxWidth / COLS, maxHeight / ROWS);
+  const boardWidth = cellSize * COLS;
+  const boardHeight = cellSize * ROWS;
+  
   return h('div', {style:{display:'flex',flexDirection:'column',height:'100vh'}},
     // Score Bar
     h('div', {className:'score-bar'},
@@ -729,24 +764,28 @@ function Game() {
       )
     ),
     
-    // Board
+    // Board - 12×18
     h('div', {className:'board-container'},
       (wordPreview.valid.length>0 || wordPreview.invalid.length>0 || temp.length>0) && h('div', {className:'word-tooltip'},
-        wordPreview.valid.length>0 && h('div', {style:{color:'#059669',fontWeight:'800',fontSize:'12px',marginBottom:'4px'}}, '✅ ' + wordPreview.valid.join(', ')),
-        wordPreview.invalid.length>0 && h('div', {style:{color:'#dc2626',fontWeight:'800',fontSize:'12px',marginBottom:'4px'}}, '❌ ' + wordPreview.invalid.join(', ')),
+        wordPreview.valid.length>0 && h('div', {style:{color:'#059669',fontWeight:'900',fontSize:'11px',marginBottom:'4px'}}, '✅ ' + wordPreview.valid.join(', ')),
+        wordPreview.invalid.length>0 && h('div', {style:{color:'#dc2626',fontWeight:'900',fontSize:'11px',marginBottom:'4px'}}, '❌ ' + wordPreview.invalid.join(', ')),
         temp.length>0 && h('div', {style:{color:'#2563eb',fontWeight:'900',fontSize:'14px'}}, '+' + tempScore + ' puan')
       ),
       h('div', {
         className:'board-grid',
-        style:{gridTemplateColumns:'repeat('+BOARD_SIZE+', 1fr)'}
+        style:{
+          gridTemplateColumns:'repeat('+COLS+', 1fr)',
+          width: boardWidth + 'px',
+          height: boardHeight + 'px'
+        }
       },
-        ...Array(BOARD_SIZE).fill(null).map((_,r) => 
-          Array(BOARD_SIZE).fill(null).map((__,c) => {
+        ...Array(ROWS).fill(null).map((_,r) => 
+          Array(COLS).fill(null).map((__,c) => {
             const tile = board[r][c];
             const tempTile = temp.find(t => t.r===r && t.c===c);
-            const isTL = TRIPLE_LETTER.some(([x,y]) => x===r&&y===c);
-            const isDW = DOUBLE_WORD.some(([x,y]) => x===r&&y===c);
-            const isCS = r===7 && c===7;
+            const isTL = TRIPLE_LETTER.some(([x,y])=>x===r&&y===c);
+            const isDW = DOUBLE_WORD.some(([x,y])=>x===r&&y===c);
+            const isCS = r===CENTER[0] && c===CENTER[1];
             const isDragOver = dragTarget && dragTarget.r===r && dragTarget.c===c;
             let cc = 'board-cell';
             if(tile||tempTile) cc += ' font-black';
@@ -788,8 +827,8 @@ function Game() {
             (isDragging ? ' dragging' : ''),
           style:{
             border: isUsed ? '2px solid #d1d5db' :
-                    isActive ? '3px solid #10b981' :
-                    isSelected ? '3px solid #3b82f6' :
+                    isActive ? '4px solid #10b981' :
+                    isSelected ? '4px solid #3b82f6' :
                     '3px solid #f59e0b',
             background: isUsed ? '#f3f4f6' :
                         isActive ? '#d1fae5' :
@@ -801,14 +840,14 @@ function Game() {
           !isUsed && letter!=='*' && h('span', {
             style:{
               position:'absolute',
-              bottom:'4px',
-              right:'6px',
+              bottom:'5px',
+              right:'7px',
               fontSize:'10px',
-              fontWeight:'800',
+              fontWeight:'900',
               color:'#6b7280',
-              background:'rgba(255,255,255,0.9)',
-              padding:'2px 4px',
-              borderRadius:'4px'
+              background:'rgba(255,255,255,0.95)',
+              padding:'2px 5px',
+              borderRadius:'5px'
             }
           }, POINTS[letter]||0)
         );
@@ -817,7 +856,7 @@ function Game() {
     
     // Controls
     h('div', {className:'control-panel'},
-      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'6px'}},
+      h('div', {style:{display:'grid',gridTemplateColumns:'repeat(4, 1fr)',gap:'7px'}},
         temp.length>0 && h('button', {onClick:handlePlay, disabled:checking||wordPreview.invalid.length>0, className:'btn btn-primary', style:{gridColumn:'span 4'}}, checking ? '⏳ Kontrol' : '▶️ Oyna'),
         h('button', {onClick:handleUndo, disabled:temp.length===0, className:'btn btn-secondary'}, '↶'),
         h('button', {onClick:handleShuffle, disabled:temp.length>0, className:'btn btn-secondary'}, '🔀'),
@@ -832,23 +871,23 @@ function Game() {
     msg && h('div', {className:'toast'}, msg),
     
     // Winner
-    showWinner && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
-      h('div', {style:{background:'white',padding:'32px',borderRadius:'24px',textAlign:'center',maxWidth:'320px',width:'100%'}},
-        h('div', {style:{fontSize:'72px',marginBottom:'16px'}}, '🏆'),
-        h('h2', {style:{fontSize:'28px',fontWeight:'900',marginBottom:'16px'}}, 'Oyuncu ' + winner + ' Kazandı!'),
-        h('div', {style:{background:'#f3f4f6',padding:'16px',borderRadius:'12px',marginBottom:'20px'}},
-          h('p', {style:{fontSize:'18px',fontWeight:'800',marginBottom:'8px'}}, 'P1: ' + p1Score),
-          h('p', {style:{fontSize:'18px',fontWeight:'800'}}, 'P2: ' + p2Score)
+    showWinner && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',zIndex:999}},
+      h('div', {style:{background:'white',padding:'36px',borderRadius:'28px',textAlign:'center',maxWidth:'340px',width:'100%',boxShadow:'0 20px 60px rgba(0,0,0,0.4)'}},
+        h('div', {style:{fontSize:'80px',marginBottom:'20px'}}, '🏆'),
+        h('h2', {style:{fontSize:'32px',fontWeight:'900',marginBottom:'20px',background:'linear-gradient(135deg, #667eea, #764ba2)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}, 'Oyuncu ' + winner + ' Kazandı!'),
+        h('div', {style:{background:'linear-gradient(135deg, #f3f4f6, #e5e7eb)',padding:'20px',borderRadius:'16px',marginBottom:'24px'}},
+          h('p', {style:{fontSize:'20px',fontWeight:'900',marginBottom:'10px',color:'#ef4444'}}, 'P1: ' + p1Score + ' puan'),
+          h('p', {style:{fontSize:'20px',fontWeight:'900',color:'#eab308'}}, 'P2: ' + p2Score + ' puan')
         ),
-        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'16px',fontSize:'16px'}}, '🔄 Yeni Oyun')
+        h('button', {onClick:handleReset, className:'btn btn-primary', style:{width:'100%',padding:'18px',fontSize:'18px'}}, '🔄 Yeni Oyun')
       )
     ),
     
     // Joker
-    showJokerModal && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.7)',display:'flex',alignItems:'center',justifyContent:'center',padding:'16px',zIndex:999}},
-      h('div', {style:{background:'white',padding:'24px',borderRadius:'20px',maxWidth:'380px',width:'100%'}},
-        h('h3', {style:{fontSize:'20px',fontWeight:'900',marginBottom:'16px',textAlign:'center'}}, '⭐ Joker Seç'),
-        h('div', {style:{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:'8px',marginBottom:'16px'}},
+    showJokerModal && h('div', {style:{position:'fixed',inset:0,background:'rgba(0,0,0,0.75)',backdropFilter:'blur(4px)',display:'flex',alignItems:'center',justifyContent:'center',padding:'20px',zIndex:999}},
+      h('div', {style:{background:'white',padding:'28px',borderRadius:'24px',maxWidth:'400px',width:'100%',boxShadow:'0 20px 60px rgba(0,0,0,0.4)'}},
+        h('h3', {style:{fontSize:'22px',fontWeight:'900',marginBottom:'20px',textAlign:'center',background:'linear-gradient(135deg, #fbbf24, #f59e0b)',WebkitBackgroundClip:'text',WebkitTextFillColor:'transparent'}}, '⭐ Joker Harfi Seç'),
+        h('div', {style:{display:'grid',gridTemplateColumns:'repeat(7, 1fr)',gap:'10px',marginBottom:'20px'}},
           ...LETTERS.map(letter => 
             h('button', {
               key:letter,
@@ -869,13 +908,13 @@ function Game() {
                 background:'linear-gradient(135deg, #fef3c7, #fde047)',
                 border:'3px solid #f59e0b',
                 fontWeight:'900',
-                fontSize:'16px',
+                fontSize:'17px',
                 padding:'0'
               }
             }, letter)
           )
         ),
-        h('button', {onClick:() => { vibrate(15); setShowJokerModal(false); setJokerIdx(null); }, className:'btn btn-secondary', style:{width:'100%',padding:'14px'}}, 'İptal')
+        h('button', {onClick:() => { vibrate(15); setShowJokerModal(false); setJokerIdx(null); }, className:'btn btn-secondary', style:{width:'100%',padding:'16px',fontSize:'15px'}}, 'İptal')
       )
     )
   );
