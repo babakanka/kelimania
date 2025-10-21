@@ -3,12 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KeliMania - Mobil Kelime Oyunu</title>
+    <title>KeliMania - Türkçe Kelime Oyunu</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Türkçe kelime oluşturma ve strateji oyunu. TDK Sözlük destekli.">
+    <meta name="theme-color" content="#7c3aed">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KeliMania">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='105' fill='%237c3aed'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='280' fill='white' font-family='system-ui, sans-serif' font-weight='bold'%3EKM%3C/text%3E%3C/svg%3E">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' rx='20' fill='%237c3aed'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' font-size='60' fill='white' font-family='system-ui' font-weight='bold'%3EK%3C/text%3E%3C/svg%3E">
+    
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://cdn.tailwindcss.com"></script>
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="mobile-web-app-capable" content="yes">
+    
     <style>
         * {
             -webkit-tap-highlight-color: transparent;
@@ -48,6 +65,70 @@
             background: linear-gradient(135deg, #fef3c7 0%, #fde047 100%); 
             color: #92400e; 
         }
+        
+        /* Splash Screen */
+        #splash {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #7c3aed 0%, #3b82f6 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s;
+        }
+        #splash.hide {
+            opacity: 0;
+            pointer-events: none;
+        }
+        .splash-logo {
+            font-size: 120px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+        }
+        .splash-text {
+            font-size: 32px;
+            font-weight: bold;
+            color: white;
+            margin-bottom: 10px;
+        }
+        .splash-subtitle {
+            font-size: 16px;
+            color: rgba(255,255,255,0.8);
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Install prompt */
+        #install-prompt {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: white;
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            display: none;
+            z-index: 1000;
+        }
+        #install-prompt.show {
+            display: block;
+            animation: slideUp 0.3s;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
         @media (max-width: 768px) {
             .board-cell {
                 font-size: 6px;
@@ -56,9 +137,75 @@
     </style>
 </head>
 <body>
+    <!-- Splash Screen -->
+    <div id="splash">
+        <div class="splash-logo">🎮</div>
+        <div class="splash-text">KeliMania</div>
+        <div class="splash-subtitle">Türkçe Kelime Oyunu</div>
+    </div>
+    
+    <!-- Install Prompt -->
+    <div id="install-prompt">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px;">
+            <strong style="font-size: 16px;">📱 Ana Ekrana Ekle</strong>
+            <button onclick="closeInstallPrompt()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
+        </div>
+        <p style="margin: 0 0 12px 0; font-size: 14px; color: #666;">Offline oynamak için uygulamayı yükle!</p>
+        <button id="install-button" style="width: 100%; background: #7c3aed; color: white; border: none; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">
+            Yükle
+        </button>
+    </div>
+    
     <div id="root"></div>
     
     <script>
+// PWA Installation
+let deferredPrompt;
+const installPrompt = document.getElementById('install-prompt');
+const installButton = document.getElementById('install-button');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    
+    // Show install prompt after 3 seconds
+    setTimeout(() => {
+        installPrompt.classList.add('show');
+    }, 3000);
+});
+
+installButton.addEventListener('click', async () => {
+    if (!deferredPrompt) return;
+    
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response: ${outcome}`);
+    
+    deferredPrompt = null;
+    installPrompt.classList.remove('show');
+});
+
+function closeInstallPrompt() {
+    installPrompt.classList.remove('show');
+}
+
+// Register Service Worker
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(reg => console.log('✅ Service Worker registered:', reg.scope))
+            .catch(err => console.log('❌ Service Worker registration failed:', err));
+    });
+}
+
+// Hide splash screen after load
+window.addEventListener('load', () => {
+    setTimeout(() => {
+        document.getElementById('splash').classList.add('hide');
+    }, 2000);
+});
+
+const h = React.createElement;
 // KeliMania v2 - Mobile Optimized with Click System
 const h = React.createElement;
 const { useState } = React;
